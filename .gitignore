@@ -47,6 +47,8 @@ rubber.cache
 ## Build tool directories for auxiliary files
 # latexrun
 latex.out/
+# Build output directory
+build/
 
 ## Auxiliary and intermediate files from other packages:
 # algorithms
@@ -311,3 +313,8 @@ TSWLatexianTemp*
 # option is specified. Footnotes are the stored in a file with suffix Notes.bib.
 # Uncomment the next line to have this generated file ignored.
 #*Notes.bib
+
+# Temp Files
+
+*~
+*.tmp
