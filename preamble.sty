@@ -1,0 +1,173 @@
+\ProvidesPackage{preamble}
+
+% ======================================================================
+% Document Setup
+% ======================================================================
+
+% Page geometry and layout
+\usepackage[
+    top=0.75in,
+    bottom=1in,
+    left=0.8in,
+    right=0.8in
+]{geometry}
+
+\pagestyle{empty}
+
+% ======================================================================
+% Core Packages
+% ======================================================================
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[expansion=false]{microtype}         % Better typography
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs, array, longtable, tabularx, multicol, enumitem}
+\usepackage{graphicx, float, afterpage, rotating, lscape}
+\usepackage{xcolor, tikz, lipsum}
+\usepackage{hyperref}
+\usepackage[numbers, sort&compress]{natbib}
+\usepackage{listingsutf8}
+\usepackage{inconsolata}       % Monospace font for code
+\usepackage{import}            % For relative imports
+
+% ======================================================================
+% Hyperlink Setup
+% ======================================================================
+\hypersetup{
+    colorlinks = true,
+    linkcolor  = black,
+    citecolor  = black,
+    filecolor  = magenta,
+    urlcolor   = blue,
+    pdfauthor  = {Kshitish Madbhavi},
+    pdftitle   = {Document},
+    pdfcreator = {LaTeX via Overleaf}
+}
+
+% ======================================================================
+% Color Definitions
+% ======================================================================
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\definecolor{keywordblue}{rgb}{0.13,0.13,1}
+\definecolor{yamlorange}{rgb}{1.0,0.49,0.0}
+\definecolor{background}{HTML}{EEEEEE}
+\definecolor{delim}{RGB}{20,105,176}
+\colorlet{punct}{red!60!black}
+\colorlet{numb}{magenta!60!black}
+
+% ======================================================================
+% TikZ Setup
+% ======================================================================
+\usetikzlibrary{positioning, arrows.meta, shapes.geometric}
+
+% ======================================================================
+% Listings Setup
+% ======================================================================
+
+% ---------- Base style ----------
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    basicstyle=\ttfamily\footnotesize,
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue}\bfseries,
+    stringstyle=\color{codepurple},
+    numbers=left,
+    numberstyle=\scriptsize\color{codegray},
+    numbersep=5pt,
+    breaklines=true,
+    breakatwhitespace=false,
+    captionpos=b,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    keepspaces=true,
+    tabsize=2,
+    frame=single,
+    rulecolor=\color{black!20}
+}
+
+% ---------- TypeScript ----------
+\lstdefinelanguage{typescript}{
+    keywords={
+        const, let, var, import, from, interface, extends, type, new, export, model,
+        Schema, Document, Types, required, default, timestamps, boolean, string, number,
+        true, false, null, undefined, public, private, protected, readonly,
+        async, await, function, return, class, extends, implements
+    },
+    keywordstyle=\color{keywordblue}\bfseries,
+    ndkeywords={
+        boolean, string, number, Date, any, void, null, undefined,
+        IAutomatedFlags, IChatbotInteraction
+    },
+    ndkeywordstyle=\color{teal}\bfseries,
+    comment=[l]{//},
+    commentstyle=\color{codegreen},
+    stringstyle=\color{codepurple},
+    morecomment=[s]{/*}{*/},
+    morestring=[b]`,
+    sensitive=true
+}
+\lstdefinestyle{typescriptstyle}{
+    language=typescript,
+    style=mystyle
+}
+
+% ---------- YAML ----------
+\lstdefinelanguage{yaml}{
+    keywords={name, on, jobs, runs-on, steps, uses, with, env, run, workflow_dispatch, ubuntu-latest, secrets},
+    keywordstyle=\color{keywordblue}\bfseries,
+    keywords_2={true, false, null},
+    keywordstyle_2=\color{yamlorange}\bfseries,
+    comment=[l]{\#},
+    commentstyle=\color{codegreen},
+    stringstyle=\color{codepurple},
+    morestring=[b]',
+    morestring=[b]",
+    sensitive=true
+}
+\lstdefinestyle{yamlstyle}{
+    language=yaml,
+    style=mystyle
+}
+
+% ---------- JSON ----------
+\lstdefinelanguage{json}{
+    basicstyle=\normalfont\ttfamily\footnotesize,
+    numbers=left,
+    numberstyle=\scriptsize\color{codegray},
+    stepnumber=1,
+    numbersep=8pt,
+    showstringspaces=false,
+    breaklines=true,
+    frame=single,
+    backgroundcolor=\color{background},
+    rulecolor=\color{black!20},
+    literate=
+     *{0}{{{\color{numb}0}}}{1}
+      {1}{{{\color{numb}1}}}{1}
+      {2}{{{\color{numb}2}}}{1}
+      {3}{{{\color{numb}3}}}{1}
+      {4}{{{\color{numb}4}}}{1}
+      {5}{{{\color{numb}5}}}{1}
+      {6}{{{\color{numb}6}}}{1}
+      {7}{{{\color{numb}7}}}{1}
+      {8}{{{\color{numb}8}}}{1}
+      {9}{{{\color{numb}9}}}{1}
+      {:}{{{\color{punct}{:}}}}{1}
+      {,}{{{\color{punct}{,}}}}{1}
+      {\{}{{{\color{delim}{\{}}}}{1}
+      {\}}{{{\color{delim}{\}}}}}{1}
+      {[}{{{\color{delim}{[}}}}{1}
+      {]}{{{\color{delim}{]}}}}{1}
+}
+\lstdefinestyle{jsonstyle}{
+    language=json,
+    style=mystyle
+}
+
+% ======================================================================
+% End of Preamble
+% ======================================================================

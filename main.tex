@@ -1,0 +1,65 @@
+\documentclass[10pt, a4paper]{article}
+
+\usepackage{lmodern}
+\usepackage{preamble}
+
+\newcommand{\studentname}{Kshitish Kiran Madbhavi}
+\newcommand{\studentnumber}{24110175}
+\newcommand{\researchcentre}{IIT Gandhinagar}
+\newcommand{\projecttitle}{MEttLE:\@ A Learning Environment for Engineering Estimation}
+\newcommand{\supervisor}{Prof.~\ Aditi Kothiyal}
+\begin{document}
+
+\begin{center}
+{\Huge{Selection and Benchmarking of a Large Language Model for Mettle's Socratic and Adaptive Chatbot}} \\
+\vspace{2mm}
+{\Large{CS 399}} \\
+\vspace{1mm}
+{\Large{Indian Institute of Technology Gandhinagar}}
+\end{center}
+
+\vspace{5mm}
+\hrule
+\vspace{1mm}
+\hrule
+
+\vspace{3mm}
+\begin{tabular}{ll} 
+Name:           	        & {\studentname}   \\ 
+Student Number: 	        & {\studentnumber} \\ 
+Research Centre: 	        & {\researchcentre}  \\ 
+Research Project Title: 	& {\projecttitle}  \\ 
+Primary Supervisor: 	    & {\supervisor}  \\ 
+\end{tabular}
+
+\vspace{3mm}
+\hrule
+\vspace{1mm}
+\hrule
+
+\import{sections/}{01_Abstract.tex}
+\import{sections/}{02_Introduction.tex}
+\import{sections/}{03_Evaluation_Criteria.tex}
+\import{sections/}{04_Candidate_Models.tex}
+\import{sections/}{05_Benchmark_Harness.tex}
+\import{sections/}{06_Socratic_Rubrics.tex}
+\import{sections/}{07_Statistical_Analysis.tex}
+\import{sections/}{08_Experiments.tex}
+\import{sections/}{09_Cost_Modelling.tex}
+\import{sections/}{10_Safety.tex}
+\import{sections/}{11_Results.tex}
+\import{sections/}{12_Decision.tex}
+\import{sections/}{13_Limitations_and_Future.tex}
+\import{sections/}{14_Reproducibility_Guide.tex}
+
+\appendix
+
+\import{appendices/A_Full_Human_Rubric/}{A_Full_Human_Rubric.tex}
+\import{appendices/}{B_Complete_Prompt_Bank.tex}
+\import{appendices/C_Schemas/}{C_Schemas.tex}
+\import{appendices/D_Benchmark_Harness/}{D_Benchmark_Harness.tex}
+\import{appendices/}{E_GitHub_Actions_YAML.tex}
+\import{appendices/}{F_Reproducibility_Checklist.tex}
+\import{appendices/}{G_Glossary.tex}
+
+\end{document}
