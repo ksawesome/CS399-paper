@@ -12,8 +12,6 @@
     right=0.8in
 ]{geometry}
 
-\pagestyle{empty}
-
 % ======================================================================
 % Core Packages
 % ======================================================================
@@ -25,10 +23,18 @@
 \usepackage{graphicx, float, afterpage, rotating, lscape}
 \usepackage{xcolor, tikz, lipsum}
 \usepackage{hyperref}
+\usepackage{cleveref}
 \usepackage[numbers, sort&compress]{natbib}
 \usepackage{listingsutf8}
 \usepackage{inconsolata}       % Monospace font for code
 \usepackage{import}            % For relative imports
+\usepackage{siunitx}            % For number alignment in tables
+\usepackage{subcaption}        % For subfigures/subtables
+\usepackage{minted}             % For advanced code listings (requires -shell-escape)
+\usepackage[acronym]{glossaries} % For glossary and acronym support
+\usepackage{imakeidx}          % For subject index
+% \usepackage[backend=biber,style=authoryear,sorting=nyt]{biblatex}
+% \addbibresource{references.bib}
 
 % ======================================================================
 % Hyperlink Setup
