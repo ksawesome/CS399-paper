@@ -33,19 +33,28 @@
 \usepackage{minted}             % For advanced code listings (requires -shell-escape)
 \usepackage[acronym]{glossaries} % For glossary and acronym support
 \usepackage{imakeidx}          % For subject index
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+
+% ======================================================================
+% Header/Footer Setup
+% ======================================================================
+\pagestyle{fancy}
+\fancyhf{} % clear all header/footer fields
+\fancyfoot[C]{Page\ \thepage\ of\ \pageref{LastPage}}
 
 % ======================================================================
 % Hyperlink Setup
 % ======================================================================
 \hypersetup{
     colorlinks = true,
-    linkcolor  = black,
-    citecolor  = black,
+    linkcolor  = blue,
+    citecolor  = blue,
     filecolor  = magenta,
     urlcolor   = blue,
-    pdfauthor  = {Kshitish Madbhavi},
-    pdftitle   = {Document},
-    pdfcreator = {LaTeX via Overleaf}
+    pdfauthor  = {Kshitish Kiran Madbhavi},
+    pdftitle   = {Selection and Benchmarking of a Large Language Model for Mettle's Socratic and Adaptive Chatbot},
+    pdfcreator = {LaTeX}
 }
 
 % ======================================================================
