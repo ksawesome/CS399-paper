@@ -30,7 +30,18 @@
 \usepackage{import}            % For relative imports
 \usepackage{siunitx}            % For number alignment in tables
 \usepackage{subcaption}        % For subfigures/subtables
-\usepackage{minted}             % For advanced code listings (requires -shell-escape)
+% Minted for advanced code listings (requires -shell-escape and pygmentize)
+\usepackage{minted}
+
+% Minted defaults: tweak as needed
+\setminted{
+    fontsize=\footnotesize,
+    breaklines=true,
+    frame=single,
+    framesep=2mm,
+    baselinestretch=1,
+    tabsize=2
+}
 \usepackage[acronym]{glossaries} % For glossary and acronym support
 \usepackage{imakeidx}          % For subject index
 \usepackage{fancyhdr}
@@ -180,6 +191,13 @@
     language=json,
     style=mystyle
 }
+
+
+% ======================================================================
+% Custom Macros and Environments
+% ======================================================================
+% Keywords macro for consistent formatting
+\providecommand{\keywords}[1]{\small\textbf{Keywords:} #1}
 
 % Set graphics path for figures
 \graphicspath{{figures/}}
