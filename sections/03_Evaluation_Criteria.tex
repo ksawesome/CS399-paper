@@ -1,98 +1,221 @@
 \section{Evaluation Criteria}
 \label{sec:evaluation_criteria}
 
+To ensure a rigorous and transparent evaluation, this section documents how each of the eight high-level criteria introduced previously was operationalized. For each evaluation axis, we provided a precise definition, described the measurement methodology, and specified the units in which results were reported. This framework enabled a robust, multi-dimensional, and reproducible comparison of the candidate Large Language Models (LLMs), ensuring that the final selection was grounded in empirical evidence rather than subjective judgement.
+
+Each criterion was carefully designed to capture both quantitative and qualitative aspects of model performance. Quantitative metrics included factors such as latency, response length, and projected cost, while qualitative assessments focused on pedagogical quality, safety, and contextual adaptability. By combining these measures, we established a comprehensive rubric that allowed for consistent scoring, aggregation, and comparison across all candidate models, forming the foundation for a principled model selection process.
+
+
 \subsection{Pedagogical Quality (Socratic Depth \& Usefulness)}
 \label{subsec:pedagogical_quality}
 
 \subsubsection{Definition}
 \label{subsubsec:pedagogical_definition}
+Pedagogical quality was defined as the model's ability to function effectively as a Socratic tutor. This entailed eliciting, guiding, and deepening a student's reasoning process through targeted, open-ended questions rather than providing direct answers or declarative statements. The core objective was to foster the student's own mental simulation and model-based reasoning, hallmarks of expert estimation. High-quality responses were those that identified a student's misconceptions or partial understanding and scaffolded their thinking toward a more complete conceptual model without revealing the solution outright.
 
 \subsubsection{Measurement}
 \label{subsubsec:pedagogical_measurement}
+Pedagogical quality was assessed primarily through a human-rated rubric. Each model-generated response was scored by at least two trained evaluators on a five-point scale across several dimensions, including question-orientation, relevance, and scaffolding depth. In addition, automated linguistic analysis was used to supplement the qualitative assessment, calculating the ratio of interrogative to declarative sentences in each response to provide a quantitative estimate of Socratic engagement.
 
 \subsubsection{Units}
 \label{subsubsec:pedagogical_units}
+Pedagogical quality was reported as the mean rubric score on a scale of 1–5. To complement these numeric scores, representative high- and low-scoring transcripts were provided to illustrate concrete differences in model performance and Socratic depth.
 
 \subsection{Contextual Adaptability}
 \label{subsec:contextual_adaptability}
 
 \subsubsection{Definition}
 \label{subsubsec:contextual_definition}
+Contextual adaptability was defined as the model's ability to dynamically incorporate and reason with unstructured, problem-specific information provided by an instructor "on the fly." This included numerical constraints, physical parameters, system requirements, and qualitative hints. A highly adaptable model not only used this information in its responses but also maintained context across multiple conversational turns, ensuring guidance remained relevant to the specific estimation problem. This criterion directly evaluated the "adaptive" requirement of the chatbot, a core objective of the project.
 
 \subsubsection{Measurement}
 \label{subsubsec:contextual_measurement}
+Contextual adaptability was assessed using a combination of automated checks and human evaluation. Prompts designed to test this capability included a set of unique, teacher-provided context elements. The following measures were used:
+
+\begin{enumerate}
+    \item \textbf{Automated Keyword Check:} Each response was programmatically scanned for the presence of the key contextual elements, producing a binary pass/fail score for inclusion.
+    \item \textbf{Human Fidelity Score:} Trained evaluators rated each response on a five-point scale, assessing how accurately and appropriately the context was applied (see \cref{subsec:contextual_adaptability}). This measured both the inclusion of context and its correct usage.
+    \item \textbf{Hallucination Rate:} Automated checks flagged responses that introduced numerical values or concepts not present in the prompt or the provided context.
+\end{enumerate}
 
 \subsubsection{Units}
 \label{subsubsec:contextual_units}
+Contextual adaptability was reported as a \textbf{percentage of context retention}—the proportion of prompts where the model successfully included context elements—and a \textbf{mean context fidelity score} on a scale of 1–5. Hallucination rates were also reported as a percentage of prompts containing extraneous or incorrect information.
 
 \subsection{Safety \& Ethics / Data Privacy}
 \label{subsec:safety_ethics}
 
 \subsubsection{Definition}
 \label{subsubsec:safety_definition}
+Safety and ethics, including data privacy, were defined as the model's adherence to essential safety protocols and privacy standards for an educational application. This encompassed the system's ability to avoid generating or processing Personally Identifiable Information (PII), to refrain from providing sensitive or potentially harmful advice (e.g., outside engineering contexts), and to comply with the project's data logging and retention policies. A model meeting this criterion produced responses that were appropriate for all students while respecting their privacy and ethical considerations.
 
 \subsubsection{Measurement}
 \label{subsubsec:safety_measurement}
+Evaluation was conducted using a two-pronged approach:
+
+\begin{enumerate}
+    \item \textbf{Automated PII Detection:} A script scanned the complete set of model responses to flag potential PII or sensitive data exposure.
+    \item \textbf{Manual Review:} All responses flagged by the automated system, together with a randomized sample of unflagged responses, underwent manual review. Human evaluators checked for subtle safety issues, inappropriate tone, or privacy concerns that might have been missed by automated tools (see \cref{subsec:safety_ethics}).
+\end{enumerate}
 
 \subsubsection{Units}
 \label{subsubsec:safety_units}
+Safety and ethics were reported as the \textbf{rate of PII incidents per 1,000 responses}. This quantitative measure was supplemented by a \textbf{qualitative compliance checklist}, documenting the number of safety and privacy standards successfully met during manual review.
 
 \subsection{Cost}
 \label{subsec:cost}
 
 \subsubsection{Definition}
 \label{subsubsec:cost_definition}
+Cost was defined as the direct financial expense incurred to use a model's API for the benchmark's set of prompts. This criterion addressed the project's requirement to identify the most cost-effective, yet pedagogically viable, LLM, ensuring that the final recommendation would be financially sustainable for deployment in an academic setting. Costs were calculated using each model's publicly listed input and output token pricing.
 
 \subsubsection{Measurement}
 \label{subsubsec:cost_measurement}
+Cost was measured programmatically for every model interaction. The benchmarking harness logged the exact number of \verb|tokens_in| (input prompt) and \verb|tokens_out| (model response) for each API call. Token usage was then multiplied by the model-specific price per token for both input and output. The total cost for each model was computed as the sum of these individual transaction costs across the entire prompt set. This approach ensured precise, reproducible cost calculations (see \cref{sec:evaluation_criteria} for context on the benchmark prompts).
 
 \subsubsection{Units}
 \label{subsubsec:cost_units}
+Cost was reported in two complementary formats:
+
+\begin{enumerate}
+    \item \textbf{Price per 1,000 tokens:} Normalized cost allowing direct comparison of efficiency across models.
+    \item \textbf{Cost per 1,000 classroom interactions:} Extrapolated cost representing the projected expense for one thousand student-chatbot interactions, providing a tangible metric for academic deployment planning.
+\end{enumerate}
 
 \subsection{Latency and Throughput}
 \label{subsec:latency_throughput}
 
 \subsubsection{Definition}
 \label{subsubsec:latency_definition}
+Latency and throughput were evaluated as time-based performance metrics critical to maintaining a fluid and interactive user experience in a real-time classroom setting.
+
+\begin{itemize}
+    \item \textbf{Latency} was defined as the end-to-end duration from the moment a request was sent to the model's API to the moment the complete response was received. Both typical performance (median latency) and worst-case scenarios (95th percentile tail latency) were considered to capture user experience under normal and stressed conditions.
+    \item \textbf{Throughput} was defined as the maximum number of requests the API could successfully handle per unit of time under a concurrent load simulating multiple students interacting with the chatbot simultaneously.
+\end{itemize}
 
 \subsubsection{Measurement}
 \label{subsubsec:latency_measurement}
+Performance was measured through two complementary approaches:
+
+\begin{enumerate}
+    \item \textbf{Response Time Recording:} The benchmarking harness automatically recorded the \verb|latency_ms| for each API call during the primary experiments. This captured latency distributions across all prompts and models.
+    \item \textbf{Synthetic Load Test:} Separate concurrent load tests were conducted to simulate multiple simultaneous users. These tests quantified each model's stability and maximum achievable throughput under realistic classroom-like conditions.
+\end{enumerate}
 
 \subsubsection{Units}
 \label{subsubsec:latency_units}
+Metrics were reported using the following standard units:
+
+\begin{itemize}
+    \item \textbf{Median Latency:} milliseconds (ms)
+    \item \textbf{95th Percentile Latency:} milliseconds (ms)
+    \item \textbf{Throughput:} requests per second (rps)
+\end{itemize}
+
+These measurements ensured that the selected model could reliably support real-time Socratic tutoring at classroom scale (see \cref{subsec:pedagogical_quality,subsec:contextual_adaptability} for relevant pedagogical context).
 
 \subsection{Reliability and Availability}
 \label{subsec:reliability_availability}
 
 \subsubsection{Definition}
 \label{subsubsec:reliability_definition}
+Reliability and availability were defined as the measures of the API service's operational consistency and uptime. This criterion evaluated the robustness of each LLM provider's infrastructure, which is critical for a classroom tool that must be dependable during scheduled instructional periods. It encompassed the frequency of unprompted errors, the API's behavior under high-frequency requests (rate-limit handling), and any observed downtime during the testing window.
 
 \subsubsection{Measurement}
 \label{subsubsec:reliability_measurement}
+Reliability data was systematically captured for every API call through the benchmarking harness. The \verb|http_status| code of each response was logged, enabling a precise count of failed requests (any non-2xx status code). Failures were categorized as follows:
+
+\begin{itemize}
+    \item \textbf{Server-side errors (5xx):} indicating issues on the provider's end.
+    \item \textbf{Client-side errors (4xx):} indicating misconfigured requests.
+    \item \textbf{Rate-limit throttles (429):} indicating requests exceeding allowed concurrency.
+\end{itemize}
+
+Additionally, instances where the service was completely unreachable were recorded as failures. The harness also tracked retry attempts required to successfully complete each request, providing insight into robustness under transient failures.
 
 \subsubsection{Units}
 \label{subsubsec:reliability_units}
+Reliability was reported using the following metrics:
+
+\begin{itemize}
+    \item \textbf{Failure Rate:} Percentage of total requests that did not succeed on the first attempt.
+    \item \textbf{Retry Count:} Total number of automatic retries executed per model to complete the benchmark.
+\end{itemize}
+
+These metrics quantify both the operational stability of the LLM APIs and their suitability for real-time classroom deployment (see \cref{subsec:latency_throughput,subsec:pedagogical_quality} for related performance and pedagogical context).
 
 \subsection{Ease of Integration and Tooling}
-\label{subsec:ease_integration}
+\label{subsec:integration_tooling}
 
 \subsubsection{Definition}
-\label{subsubsec:ease_definition}
+\label{subsubsec:integration_definition}
+Ease of integration and tooling was defined as a qualitative measure of the developer effort required to incorporate a candidate model into the existing Mettle application stack. This criterion evaluated the maturity and accessibility of each provider's developer ecosystem, which was crucial given the project's nine-week timeframe. Key considerations included the availability and quality of official Software Development Kits (SDKs), particularly for Node.js/TypeScript to match the Mettle backend, the clarity and completeness of API documentation, and the presence of advanced features such as fine-tuning, embedding APIs, or other extensibility options that could support future enhancements.
 
 \subsubsection{Measurement}
-\label{subsubsec:ease_measurement}
+\label{subsubsec:integration_measurement}
+Assessment of integration ease was conducted through a combination of checklist evaluation and hands-on testing:
+
+\begin{enumerate}
+    \item \textbf{Qualitative Checklist:} For each model, a checklist was completed documenting the availability of official Node.js clients, clarity of API reference documentation, ease of authentication setup, and the level of community and support resources.
+    \item \textbf{Practical Integration Test:} The time required to develop a functional adapter for each model was measured. This included the effort from initial environment setup to the execution of the first successful "hello world" API call within a cloned instance of the Mettle backend.
+\end{enumerate}
 
 \subsubsection{Units}
-\label{subsubsec:ease_units}
+\label{subsubsec:integration_units}
+Results for this criterion were reported as:
+
+\begin{itemize}
+    \item \textbf{Checklist Completion:} Presence or absence of key SDK and documentation features for each model.
+    \item \textbf{Time-to-Integrate:} Developer-hours required to implement a working adapter.
+\end{itemize}
+
+These measurements provided a concrete, reproducible evaluation of the practical effort required to deploy each candidate model and supported cross-referencing with other performance and cost criteria (see \cref{subsec:cost,subsec:reliability_availability}).
 
 \subsection{Explainability and Controllability}
 \label{subsec:explainability_controllability}
 
 \subsubsection{Definition}
 \label{subsubsec:explainability_definition}
+Explainability and controllability were defined as the model's ability to reliably conform its outputs to a specified style, tone, and set of behavioral rules—specifically, the Socratic pedagogical approach. A controllable model consistently responds predictably to system prompts and configurable API parameters (e.g., temperature), ensuring that the chatbot maintains its intended educational function while avoiding undesirable conversational behaviors. This criterion directly supports the pedagogical objectives and safety requirements outlined in \cref{subsec:pedagogical_quality,subsec:safety_ethics}.
 
 \subsubsection{Measurement}
 \label{subsubsec:explainability_measurement}
+Controllability was evaluated through a series of targeted experiments:
+
+\begin{enumerate}
+    \item \textbf{Systematic Variation of Control Inputs:} For each student prompt, the model was queried multiple times with different system prompt templates (e.g., strict Socratic vs. hybrid conversational) and varying temperature settings.
+    \item \textbf{Rubric-Based Assessment:} The outputs for each configuration were scored using the Pedagogical Quality rubric (\cref{subsec:pedagogical_quality}). Consistent and predictable changes in rubric scores across variations were taken as evidence of effective controllability.
+    \item \textbf{Repeatability Check:} Multiple runs were performed to ensure that observed changes were reproducible and not artifacts of random output variation.
+\end{enumerate}
 
 \subsubsection{Units}
 \label{subsubsec:explainability_units}
+The primary metric was the delta ($\delta$) in mean Pedagogical Quality rubric scores observed between different control configurations. This quantitative measure captured the sensitivity and predictability of the model’s behavior in response to developer-specified instructions. Supplementary qualitative examples were also presented to illustrate high- and low-controllability behaviors in practice.
+
+To synthesize the results across the eight evaluation axes into a unified score for each candidate model, we applied a weighted aggregation scheme. The weights were assigned to reflect the strategic priorities of the project, emphasizing pedagogical effectiveness and contextual adaptability while appropriately accounting for technical performance, cost, and operational considerations.
+
+\begin{table}[h!]
+\centering
+\caption{Evaluation Criteria, Weights, and Rationale}
+\label{tab:criteria_weights}
+\begin{tabular}{@{}llp{8cm}@{}}
+\toprule
+\textbf{Evaluation Criterion} & \textbf{Weight} & \textbf{Rationale} \\ \midrule
+\cref{subsec:pedagogical_quality} Pedagogical Quality & 35\% & This reflects the project’s primary objective: developing a Socratic tutoring agent capable of guiding student reasoning effectively. \\
+\cref{subsec:contextual_adaptability} Contextual Adaptability & 25\% & Incorporating teacher-provided context accurately is a central functional requirement of the adaptive chatbot. \\
+\cref{subsec:safety_ethics} Safety \& Ethics / Data Privacy & 10\% & Ensuring student safety and adherence to privacy policies is critical and non-negotiable. \\
+\cref{subsec:cost} Cost & 10\% & Financial sustainability is essential for practical deployment in classroom settings. \\
+\cref{subsec:latency_throughput} Latency \& Throughput & 5\% & While low latency supports user experience, it is secondary to pedagogical impact. \\
+\cref{subsec:reliability_availability} Reliability \& Availability & 5\% & High reliability is required for classroom deployment, though minor interruptions can be mitigated. \\
+\cref{subsec:integration_tooling} Ease of Integration \& Tooling & 5\% & Ease of integration affects project timelines but represents a one-time overhead. \\
+\cref{subsec:explainability_controllability} Explainability \& Controllability & 5\% & Controllability ensures consistent Socratic behavior, expected to be strong in modern APIs. \\ \midrule
+\textbf{Total} & \textbf{100\%} & \\ \bottomrule
+\end{tabular}
+\end{table}
+
+\FloatBarrier
+
+The final score for each model was computed as a weighted sum of its normalized performance across all criteria. Normalization ensured comparability across metrics with different units (e.g., latency in ms, pedagogical quality on a 1–5 scale, cost in USD). This methodology enabled an integrated, quantitative, and reproducible ranking that balanced educational effectiveness, operational feasibility, and practical deployment constraints.
+
+\noindent\textbf{Note:} \cref{tab:criteria_weights} can be referenced throughout the report to clarify the weightings applied during model evaluation.
