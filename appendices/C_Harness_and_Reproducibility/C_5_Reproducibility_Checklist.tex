@@ -14,10 +14,10 @@ This appendix provides a comprehensive checklist and metadata snapshot to facili
 Operating System & Ubuntu 22.04.3 LTS (Jammy Jellyfish), kernel 5.15.0-88 \\
 Python Runtime & 3.10.12 (default, Jul 5 2023, 18:54:27) [GCC 11.2.0] \\
 \texttt{pip} & 23.2.1 \\
-\texttt{virtualenv} & 20.24.3 (environment isolation for dependency management) \\
-Harness Git Repository & \texttt{https://github.com/usd-cs-research/Mettle} \\
-Harness Git Commit SHA & \texttt{a7f3c9e21b} (tag: \texttt{v1.2.0-benchmark-final}) \\
-Configuration Files Hash & SHA-256: \texttt{3d4f8a1c...} (models.json, prompts.json) \\
+\texttt{conda} & 23.7.4 (environment isolation for dependency management) \\
+Harness Git Repository & \texttt{https://github.com/ksawesome/llm-harness} \\
+Harness Git Commit SHA & \texttt{7ec2e576af5d6b8887d99f5b6bd6aaef4e4737f7} \\
+Configuration Files Hash & SHA-256: \texttt{8f79cfa47c345eefd53d2595b813958a3ca8233da7d82d66d93bfb54dbe2d8d0} (models.json) \\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -61,15 +61,15 @@ Configuration Files Hash & SHA-256: \texttt{3d4f8a1c...} (models.json, prompts.j
 \textbf{Parameter} & \textbf{Value / Details} \\
 \midrule
 \multicolumn{2}{l}{\textit{Hardware Specifications}} \\
-Processor & Apple M2 Pro (10 cores: 6 performance, 4 efficiency) \\
-Memory & 16 GB unified RAM \\
-Storage & 512 GB NVMe SSD \\
+Processor & AMD Ryzen 7 7840HS w/ Radeon 780M Graphics (8 cores, 16 threads) \\
+Memory & 16 GB DDR5 RAM \\
+Storage & 512 GB Samsung NVMe SSD \\
 \midrule
 \multicolumn{2}{l}{\textit{Network and API Configuration}} \\
 Internet Connection & Gigabit fiber (1000 Mbps down, 500 Mbps up) \\
 API Region & \texttt{us-east-1} (all providers configured for US East) \\
 DNS Resolver & Cloudflare 1.1.1.1 (primary), Google 8.8.8.8 (fallback) \\
-Firewall & Standard macOS Application Firewall (no egress restrictions) \\
+Firewall & Standard Windows Firewall (no egress restrictions) \\
 \midrule
 \multicolumn{2}{l}{\textit{Execution Timing}} \\
 Experiment Start (UTC) & 2025-10-15 08:34:21 (timestamp of first API call) \\
@@ -130,34 +130,6 @@ Llama 4 Maverick & 0.20 & 0.20 & Hugging Face Inference (converted from per-seco
 
 \paragraph{Pricing stability and future adjustments.} Providers may revise pricing over time. For longitudinal comparisons or cost-sensitivity analyses, researchers should adjust costs using updated rate tables and document the revision date. The harness logs the active price table with each run (\texttt{run\_id} metadata in SQLite; see \cref{app:sqlite_schema}), enabling retrospective cost recalculation without rerunning API calls.
 
-\subsubsection{Data Provenance and Artifact Locations}
-
-All experimental artifacts are archived in the repository under \texttt{results/} and are also available as downloadable GitHub Actions artifacts (\cref{app:github_actions_workflow}). \cref{tab:artifact_provenance} maps artifact types to storage locations and provides checksums for integrity verification.
-
-\begin{table}[h!]
-\centering
-\caption{Provenance and checksums for key experimental artifacts.\label{tab:artifact_provenance}}
-\begin{tabularx}{\textwidth}{@{}l X l@{}}
-\toprule
-\textbf{Artifact Type} & \textbf{File Path (Relative to Repository Root)} & \textbf{SHA-256 Checksum} \\
-\midrule
-Raw CSV Output & \texttt{results/raw\_output/run\_20251015\_0834.csv} & \texttt{5a7c9f2e...} \\
-SQLite Database & \texttt{results/benchmark.db} & \texttt{d4e8b1a3...} \\
-Summary JSON & \texttt{results/summary\_20251015\_0834.json} & \texttt{1f3e7c9b...} \\
-Harness Logs & \texttt{logs/harness\_20251015\_0834.log} & \texttt{8c4d2f1a...} \\
-Analysis Scripts & \texttt{scripts/generate\_report.py}, \texttt{statistical\_analysis.py} & \texttt{2b9e5f7c...} \\
-Configuration Files & \texttt{models.json}, \texttt{system\_prompts.json}, \texttt{test\_prompts.json} & \texttt{3d4f8a1c...} \\
-\bottomrule
-\end{tabularx}
-\end{table}
-
-\paragraph{Download instructions.} Artifacts are available via:
-\begin{enumerate}
-\item \textbf{GitHub repository}: Clone the repository and navigate to \texttt{results/} and \texttt{logs/} directories. Artifacts are committed to the repository under Git LFS (Large File Storage) for efficient version control of large binary files.
-\item \textbf{GitHub Actions artifacts}: Navigate to the repository's Actions tab, select the workflow run corresponding to the final benchmark (Run ID \#142, October 15, 2025), and download \texttt{benchmark-results-142.zip}.
-\item \textbf{Zenodo archival}: A permanent, versioned snapshot is deposited at Zenodo with DOI \texttt{10.5281/zenodo.XXXXXX} (to be assigned upon publication acceptance), ensuring long-term availability independent of GitHub's infrastructure.
-\end{enumerate}
-
 \subsubsection{Replication Instructions}
 
 To replicate the benchmark results independently:
@@ -165,15 +137,15 @@ To replicate the benchmark results independently:
 \begin{enumerate}
 \item \textbf{Clone the repository}:
 \begin{lstlisting}[language=bash,style=mystyle]
-git clone https://github.com/usd-cs-research/Mettle.git
-cd Mettle
-git checkout a7f3c9e21b  # Pin to exact commit used in study
+git clone https://github.com/ksawesome/llm-harness
+cd llm-harness
+git checkout 7ec2e57
 \end{lstlisting}
 
 \item \textbf{Set up Python environment}:
 \begin{lstlisting}[language=bash,style=mystyle]
-python3.10 -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+conda create -n llm-benchmark python=3.10
+conda activate llm-benchmark
 pip install --upgrade pip
 pip install -r requirements.txt
 \end{lstlisting}
@@ -206,16 +178,3 @@ python scripts/generate_report.py --input results/benchmark.db
 \end{enumerate}
 
 \paragraph{Expected deviations.} Exact bitwise reproducibility of model responses is not guaranteed due to provider-side non-determinism (temperature sampling, load balancing, infrastructure changes). However, aggregate statistics (mean latency, cost distributions, rubric scores) should remain stable within confidence intervals reported in \cref{sec:results}. Timestamp and \texttt{run\_id} fields will differ; all other telemetry fields should match closely.
-
-\subsubsection{Compliance with Reproducibility Standards}
-
-This reproducibility package adheres to best practices recommended by the ACM Artifact Review and Badging program (v1.1) and the SIGPLAN Empirical Evaluation Guidelines. Specifically:
-
-\begin{itemize}
-\item \textbf{Artifacts Available}: All code, data, configuration, and dependencies are publicly accessible under an open-source license (MIT).
-\item \textbf{Artifacts Evaluated -- Functional}: Independent reviewers confirmed the harness executes successfully on fresh installations and produces output artifacts consistent with schema definitions.
-\item \textbf{Artifacts Evaluated -- Reusable}: Configuration is parameterized via JSON and CLI flags, enabling adaptation to new models or prompt banks without code modifications.
-\item \textbf{Results Reproduced}: Aggregate results (summary statistics, rankings) were independently reproduced by two external reviewers with less than 5\% deviation from published means, confirming robustness to minor environmental variations.
-\end{itemize}
-
-A formal reproducibility review was conducted by the journal's Artifact Evaluation Committee in October 2025. The review report and committee badge are included in the supplementary materials.
