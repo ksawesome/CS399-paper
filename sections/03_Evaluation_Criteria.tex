@@ -5,6 +5,25 @@ To ensure a rigorous and transparent evaluation, this section documents how each
 
 Each criterion was carefully designed to capture both quantitative and qualitative aspects of model performance. Quantitative metrics included factors such as latency, response length, and projected cost, while qualitative assessments focused on pedagogical quality, safety, and contextual adaptability. By combining these measures, we established a comprehensive rubric that allowed for consistent scoring, aggregation, and comparison across all candidate models, forming the foundation for a principled model selection process.
 
+\begin{table}[t]
+\centering
+\caption{Overview of the eight evaluation criteria and their measurement approaches.}
+\label{tab:evaluation_overview}
+\begin{tabularx}{\textwidth}{@{}l l X@{}}
+\toprule
+\textbf{Criterion} & \textbf{Type} & \textbf{Primary Measurement Method} \\ \midrule
+Pedagogical Quality & Qualitative & Human rubric scoring (1--5 scale) + interrogative ratio analysis \\
+Contextual Adaptability & Mixed & Automated keyword checks + human fidelity scoring + hallucination detection \\
+Safety \& Ethics & Compliance & Automated PII detection + manual review + compliance checklist \\
+Cost & Quantitative & Token-level API billing analysis + extrapolation to classroom scale \\
+Latency \& Throughput & Performance & Response time logging + concurrent load testing \\
+Reliability \& Availability & Operational & HTTP status tracking + retry count + failure categorization \\
+Integration \& Tooling & Developer & SDK checklist + time-to-integrate measurement \\
+Controllability \& Instruction Following & Behavioral & System prompt sensitivity testing + rubric score delta analysis \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier
 
 \subsection{Pedagogical Quality (Socratic Depth \& Usefulness)}
 \label{subsec:pedagogical_quality}
@@ -172,12 +191,12 @@ Results for this criterion were reported as:
 
 These measurements provided a concrete, reproducible evaluation of the practical effort required to deploy each candidate model and supported cross-referencing with other performance and cost criteria (see \cref{subsec:cost,subsec:reliability_availability}).
 
-\subsection{Explainability and Controllability}
+\subsection{Controllability and Instruction Following}
 \label{subsec:explainability_controllability}
 
 \subsubsection{Definition}
 \label{subsubsec:explainability_definition}
-Explainability and controllability were defined as the model's ability to reliably conform its outputs to a specified style, tone, and set of behavioral rules—specifically, the Socratic pedagogical approach. A controllable model consistently responds predictably to system prompts and configurable API parameters (e.g., temperature), ensuring that the chatbot maintains its intended educational function while avoiding undesirable conversational behaviors. This criterion directly supports the pedagogical objectives and safety requirements outlined in \cref{subsec:pedagogical_quality,subsec:safety_ethics}.
+Controllability and instruction following were defined as the model's ability to reliably conform its outputs to a specified style, tone, and set of behavioral rules—specifically, the Socratic pedagogical approach. A controllable model consistently responds predictably to system prompts and configurable API parameters (e.g., temperature), ensuring that the chatbot maintains its intended educational function while avoiding undesirable conversational behaviors. This criterion directly supports the pedagogical objectives and safety requirements outlined in \cref{subsec:pedagogical_quality,subsec:safety_ethics}.
 
 \subsubsection{Measurement}
 \label{subsubsec:explainability_measurement}
@@ -197,21 +216,21 @@ To synthesize the results across the eight evaluation axes into a unified score 
 
 \begin{table}[h!]
 \centering
-\caption{Evaluation Criteria, Weights, and Rationale}
+\caption{Evaluation criteria, weights, and motivating rationale.}
 \label{tab:criteria_weights}
-\begin{tabular}{@{}llp{8cm}@{}}
+\begin{tabularx}{\textwidth}{@{}l c X@{}}
 \toprule
 \textbf{Evaluation Criterion} & \textbf{Weight} & \textbf{Rationale} \\ \midrule
-\cref{subsec:pedagogical_quality} Pedagogical Quality & 35\% & This reflects the project’s primary objective: developing a Socratic tutoring agent capable of guiding student reasoning effectively. \\
-\cref{subsec:contextual_adaptability} Contextual Adaptability & 25\% & Incorporating teacher-provided context accurately is a central functional requirement of the adaptive chatbot. \\
-\cref{subsec:safety_ethics} Safety \& Ethics / Data Privacy & 10\% & Ensuring student safety and adherence to privacy policies is critical and non-negotiable. \\
-\cref{subsec:cost} Cost & 10\% & Financial sustainability is essential for practical deployment in classroom settings. \\
-\cref{subsec:latency_throughput} Latency \& Throughput & 5\% & While low latency supports user experience, it is secondary to pedagogical impact. \\
-\cref{subsec:reliability_availability} Reliability \& Availability & 5\% & High reliability is required for classroom deployment, though minor interruptions can be mitigated. \\
-\cref{subsec:integration_tooling} Ease of Integration \& Tooling & 5\% & Ease of integration affects project timelines but represents a one-time overhead. \\
-\cref{subsec:explainability_controllability} Explainability \& Controllability & 5\% & Controllability ensures consistent Socratic behavior, expected to be strong in modern APIs. \\ \midrule
+Pedagogical Quality (\cref{subsec:pedagogical_quality}) & 35\% & Primary objective centres on guiding student reasoning via Socratic pedagogy. \\
+Contextual Adaptability (\cref{subsec:contextual_adaptability}) & 25\% & Accurate use of teacher-provided context is a core functional requirement. \\
+Safety \& Ethics / Data Privacy (\cref{subsec:safety_ethics}) & 10\% & Compliance with safety and privacy policies is critical and non-negotiable. \\
+Cost (\cref{subsec:cost}) & 10\% & Financial sustainability is essential for deployment in classrooms. \\
+Latency \& Throughput (\cref{subsec:latency_throughput}) & 5\% & Responsive interactions support user experience but remain secondary to pedagogy. \\
+Reliability \& Availability (\cref{subsec:reliability_availability}) & 5\% & Classroom readiness requires dependable uptime, even if minor interruptions are tolerable. \\
+Ease of Integration \& Tooling (\cref{subsec:integration_tooling}) & 5\% & Integration effort affects delivery timelines yet is largely a one-time cost. \\
+Controllability \& Instruction Following (\cref{subsec:explainability_controllability}) & 5\% & Consistent Socratic behaviour depends on controllable prompt adherence. \\ \midrule
 \textbf{Total} & \textbf{100\%} & \\ \bottomrule
-\end{tabular}
+\end{tabularx}
 \end{table}
 
 \FloatBarrier

@@ -1,0 +1,28 @@
+{
+  "pedagogical_friedman": {
+    "chi_sq": 120.07333333333327,
+    "p_value": 5.152259903667256e-25,
+    "kendall_w": 0.2501527777777776
+  },
+  "context_friedman": {
+    "chi_sq": 101.98000000000002,
+    "p_value": 3.7260114503553166e-21,
+    "kendall_w": 0.21245833333333336
+  },
+  "inclusion_cochran_q": {
+    "q_stat": 14.981132075471699,
+    "p_value": 0.004740510879851811
+  },
+  "reliability": {
+    "socratic_quality": {
+      "quadratic_kappa": 0.4686547491556141,
+      "icc2k": 0.7271201366156164,
+      "percent_agreement": 0.52
+    },
+    "context_fidelity": {
+      "quadratic_kappa": 0.4984824053874608,
+      "icc2k": 0.7541837429827879,
+      "percent_agreement": 0.565
+    }
+  }
+}

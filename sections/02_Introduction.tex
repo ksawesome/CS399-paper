@@ -3,13 +3,13 @@
 
 \subsection{Background}
 \label{subsection:Background}
-Research in engineering cognition has established that expertise in estimation is not a purely procedural competence, but a form of *model-based reasoning* grounded in mental simulation---the ability to internally visualize and manipulate the causal dynamics of a system before formal computation. Yet, this hallmark of expert practice remains largely implicit in most undergraduate curricula, which tend to emphasize well-structured, quantitatively closed problems over the open-ended reasoning typical of authentic engineering design.
+Research in engineering cognition has established that expertise in estimation is not a purely procedural competence, but a form of \textbf{model-based reasoning} grounded in mental simulation---the ability to internally visualize and manipulate the causal dynamics of a system before formal computation. Yet, this hallmark of expert practice remains largely implicit in most undergraduate curricula, which tend to emphasize well-structured, quantitatively closed problems over the open-ended reasoning typical of authentic engineering design.
 
 The \textit{Modelling-based Estimation Learning Environment} (Mettle) was conceived to address this pedagogical shortfall by scaffolding learners through the stages of qualitative model construction, estimation, and validation. While Mettle’s structured framework has demonstrated its potential to externalize expert-like reasoning, it remains limited by a critical scalability challenge: the absence of adaptive, dialogic feedback capable of engaging a student’s evolving line of thought in real time.
 
 In its current form, Mettle relies on static prompts and instructor-authored supports that cannot replicate the iterative questioning and reflection typical of Socratic dialogue. Traditional approaches to overcoming this limitation—such as building detailed graphical simulators for each new problem—are costly, labor-intensive, and difficult to generalize across diverse engineering domains. As a result, the platform lacks a sustainable mechanism for fostering deep cognitive engagement at scale.
 
-This study addresses that gap by investigating the integration of a Large Language Model (LLM) as an intelligent agent within Mettle, designed to deliver context-aware, conversational guidance. The objective is to create a scalable form of *Socratic tutoring* that preserves the depth of human mentorship while leveraging the reach of modern AI systems. Specifically, the proposed solution is guided by three core design principles:
+This study addresses that gap by investigating the integration of a Large Language Model (LLM) as an intelligent agent within Mettle, designed to deliver context-aware, conversational guidance. The objective is to create a scalable form of \textbf{Socratic tutoring} that preserves the depth of human mentorship while leveraging the reach of modern AI systems. Specifically, the proposed solution is guided by three core design principles:
 \begin{itemize}[leftmargin=*]
     \item \textbf{Socratic Prompting:} The agent should elicit and refine student reasoning through reflective questioning, promoting mental simulation rather than dispensing direct answers.
     \item \textbf{Lightweight Simulation:} By enabling text-based, conversational “mental models,” the system aims to provide scalable cognitive interactivity without the cost and rigidity of graphical simulation tools.
@@ -18,31 +18,34 @@ This study addresses that gap by investigating the integration of a Large Langua
 
 In doing so, this work explores how conversational AI can operationalize expert-like reasoning pedagogy in a scalable, cost-effective, and pedagogically principled way.
 
-\subsection{Problem Statement}
+\subsection{Problem Statement and Evaluation Framework}
 \label{subsection:Problem_Statement}
-The objective of this study is to identify and evaluate a Large Language Model (LLM) capable of serving as an adaptive Socratic tutor within the Mettle platform. Specifically, the model must balance four critical and often competing dimensions: (1) the *quality of Socratic engagement*—its ability to elicit reflective reasoning rather than provide direct solutions; (2) *contextual adaptability*—its responsiveness to diverse, instructor-defined problem settings; (3) *operational cost*—its efficiency and sustainability for large-scale classroom deployment; and (4) *safety and auditability*—its capacity for transparent, logged interactions that meet pedagogical and ethical standards.
+The objective of this study is to identify and evaluate a Large Language Model (LLM) capable of serving as an adaptive Socratic tutor within the Mettle platform. The model must balance critical and often competing dimensions including quality of Socratic engagement, contextual adaptability, operational cost, and safety.
 
-In essence, this research seeks to determine which currently deployed LLM achieves the most effective trade-off among these dimensions, thereby offering a practical, scalable pathway to embedding authentic expert-like reasoning within technology-enhanced learning environments.
+To systematically assess each candidate LLM, we developed a comprehensive evaluation framework comprising eight criteria that integrate pedagogical, technical, economic, and operational considerations:
 
-\subsection{Rubrics Used for Evaluation}
-\label{subsection:Rubrics}
-To determine the most suitable Large Language Model (LLM) for integration into the Mettle platform, each candidate model was systematically evaluated against a set of multi-dimensional rubrics. The evaluation framework was designed to provide a balanced and comprehensive assessment—integrating pedagogical, technical, and economic considerations within a unified decision process. The following criteria guided the comparative analysis:
+\begin{enumerate}[leftmargin=*]
+    \item \textbf{Pedagogical Quality (Socratic Depth \& Usefulness):} The model's demonstrated capacity to engage in Socratic-style dialogue that effectively elicits, scaffolds, and refines student reasoning.
+    \item \textbf{Contextual Adaptability:} The model's ability to accurately interpret and integrate instructor-provided, problem-specific context during live interactions.
+    \item \textbf{Safety \& Ethics / Data Privacy:} The extent to which the model maintains compliance with privacy standards and consistently avoids unsafe or pedagogically inappropriate outputs.
+    \item \textbf{Cost:} The projected operational cost of API usage, extrapolated to realistic classroom deployment scales.
+    \item \textbf{Latency and Throughput:} Response time characteristics and system capacity under concurrent classroom-scale load.
+    \item \textbf{Reliability and Availability:} API uptime, error rates, and operational consistency during the evaluation period.
+    \item \textbf{Ease of Integration and Tooling:} Developer effort required and quality of SDKs, documentation, and support resources.
+    \item \textbf{Controllability and Instruction Following:} The model's ability to reliably conform its outputs to specified instructional styles and behavioral rules.
+\end{enumerate}
 
-\begin{itemize}[leftmargin=*]
-    \item \textbf{Pedagogical Quality:} The model’s demonstrated capacity to engage in Socratic-style dialogue that effectively elicited, scaffolded, and refined student reasoning.
-    \item \textbf{Contextual Adaptability:} The model’s ability to accurately interpret and integrate instructor-provided, problem-specific context during live interactions.
-    \item \textbf{Cost Efficiency:} The projected operational cost of API usage, extrapolated to realistic classroom deployment scales.
-    \item \textbf{Safety and Privacy:} The extent to which the model maintained compliance with privacy standards and consistently avoided unsafe or pedagogically inappropriate outputs.
-    \item \textbf{Technical Performance:} A composite index capturing API latency, reliability, throughput stability, and ease of integration within Mettle’s full-stack architecture.
-\end{itemize}
-
-Together, these rubrics provided a rigorous, replicable basis for selecting the LLM that best balanced instructional depth, contextual intelligence, operational efficiency, and institutional safety requirements.
+Together, these rubrics provide a rigorous, replicable basis for selecting the LLM that best balances instructional depth, contextual intelligence, operational efficiency, technical robustness, and institutional safety requirements (detailed operationalization appears in \cref{sec:evaluation_criteria}).
 
 \subsection{Report Roadmap}
-This report presents a comprehensive and reproducible account of the Large Language Model (LLM) selection and benchmarking process conducted for integration into the Mettle platform. \cref{sec:evaluation_criteria} defines the multi-dimensional evaluation criteria employed in the benchmark, detailing their measurement methodologies and corresponding units. \cref{sec:candidate_models} introduces the candidate models and articulates the rationale for their inclusion. \cref{sec:benchmark_harness} describes the experimental design, including the implementation of the benchmarking harness and the construction of the standardized prompt bank.
+This report presents a comprehensive, systematic, and reproducible account of the LLM selection and benchmarking process conducted for integration into the Mettle platform. The document is structured as follows:
 
-\cref{sec:scoring_rubrics} outlines the Scoring Rubrics and Aggregation Methodology. \cref{sec:statistical_analysis} details the Statistical Analysis Plan. \cref{sec:experiments} reports the outcomes of Implementation and Integration Experiments.
+\textbf{Evaluation Framework (\cref{sec:evaluation_criteria}--\cref{sec:benchmark_harness}):} \cref{sec:evaluation_criteria} operationalizes the eight evaluation criteria, specifying measurement methodologies and reporting units. \cref{sec:candidate_models} introduces the candidate models and justifies their selection. \cref{sec:benchmark_harness} documents the experimental infrastructure, including harness implementation and prompt bank construction.
 
-Subsequently, \cref{sec:cost_modelling} presents the Cost Modelling and Deployment Economics, while \cref{sec:safety} documents the Safety, Privacy, and Logging Plan. The consolidated quantitative and qualitative results are presented in \cref{sec:results}, offering an integrated comparison across all evaluation dimensions.
+\textbf{Analytical Methodology (\cref{sec:scoring_rubrics}--\cref{sec:experiments}):} \cref{sec:scoring_rubrics} details the human rubric design and score aggregation procedures. \cref{sec:statistical_analysis} presents the statistical testing framework for pairwise comparisons. \cref{sec:experiments} reports integration experiments and technical validation.
 
-Finally, \cref{sec:decision} presents the Decision and Recommended Model(s). \cref{sec:limitations} reflects on the Limitations and Future Work, while \cref{sec:reproducibility_guide} serves as the Practical Appendix: Reproducibility Guide.
+\textbf{Deployment Considerations (\cref{sec:cost_modelling}--\cref{sec:safety}):} \cref{sec:cost_modelling} develops cost projections for classroom-scale deployment. \cref{sec:safety} outlines safety protocols, privacy compliance measures, and logging architecture.
+
+\textbf{Findings and Recommendations (\cref{sec:results}--\cref{sec:decision}):} \cref{sec:results} synthesizes quantitative and qualitative results across all evaluation dimensions. \cref{sec:decision} presents the final model recommendation with justification.
+
+\textbf{Reproducibility and Extensions (\cref{sec:limitations}--\cref{sec:reproducibility_guide}):} \cref{sec:limitations} discusses methodological limitations and future research directions. \cref{sec:reproducibility_guide} provides a practical guide for replicating the benchmark.

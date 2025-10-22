@@ -43,18 +43,16 @@ sections/
 
 ## Build Instructions
 1. **Requirements:**
-   - LaTeX distribution (MiKTeX or TeX Live 2024+)
-   - Python 3.8+
-   - [Pygments](https://pygments.org/) (for minted code listings)
+  - LaTeX distribution (MiKTeX or TeX Live 2024+)
+  - Python 3.8+
 2. **Compile the paper:**
-   - Run: `latexmk -pdf -outdir=build main.tex`
-   - If using minted, ensure `-shell-escape` is enabled and `pygmentize` is installed.
+  - Run: `latexmk -pdf -outdir=build main.tex`
 3. **View output:**
    - Final PDF: `build/main.pdf`
 
 ## Notes
-- All code listings use the `minted` package for syntax highlighting. If you encounter errors, ensure `pygmentize` is installed and no deprecated minted options are present in `preamble.sty`.
-- For a comparison of `minted` vs `listings`, see the paper or ask for a summary.
+- Code listings now rely on the `listings` package with a custom style defined in `preamble.sty`; no external syntax highlighter is required.
+- If you previously enabled `-shell-escape` for minted, it is no longer necessary for the default build.
 
 ## License
 This work is licensed under the MIT License. See `LICENSE` for details.

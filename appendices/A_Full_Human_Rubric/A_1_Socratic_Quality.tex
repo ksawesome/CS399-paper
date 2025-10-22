@@ -1,0 +1,149 @@
+\subsection{Socratic Quality Rubric: Operationalized Dimensions and Scoring Anchors}
+\label{app:socratic_quality_rubric}
+
+The Socratic Quality Rubric operationalizes the pedagogical quality criterion defined in \cref{subsec:pedagogical_quality,subsubsec:pedagogical_definition}. It evaluates the model's capacity to function as an effective Socratic tutor by guiding student reasoning through targeted questioning rather than declarative instruction. The rubric comprises five dimensions, each scored on an integer scale from 1 (poor) to 5 (excellent). Raters assign scores independently per dimension, and dimension scores are subsequently averaged to yield a composite Socratic quality score $Q$ per \cref{subsec:socratic_quality_rubric,subsec:aggregation_weighting}. This composite score serves as the primary endpoint in statistical comparisons (\cref{sec:statistical_analysis}) and drives the pedagogical quality weight ($w_Q$) in the overall model score (\cref{eq:overall_score}).
+
+\paragraph{Design rationale and alignment with study objectives.} The five dimensions were selected to capture the essential characteristics of Socratic pedagogy identified in educational research and aligned with Mettle's instructional philosophy: eliciting student thinking (question-orientation), addressing student needs (relevance), providing appropriate support (scaffolding depth), maintaining a supportive learning environment (clarity \& tone), and ensuring factual grounding (correctness). Together, these dimensions operationalize the ``Socratic depth \& usefulness'' construct in \cref{subsubsec:pedagogical_definition}, ensuring that high-scoring models foster independent reasoning and conceptual understanding rather than rote procedural application.
+
+\paragraph{Rater training and calibration.} Raters completed a structured training protocol consisting of (i) conceptual introduction to Socratic pedagogy and the five dimensions, (ii) guided annotation of ten pilot transcripts with discussion of disagreements, (iii) independent annotation of twenty calibration transcripts with iterative feedback until IRR targets were met, and (iv) refresher sessions before each evaluation wave. Training materials included the anchor definitions below, example transcripts at each score level, and decision trees for ambiguous cases (e.g., distinguishing between score 4 and 5 on scaffolding depth). Raters were blind to model identity and performance metadata throughout (\cref{subsec:sampling_blinding}).
+
+\paragraph{Aggregation and weighting within the rubric.} While raters scored each dimension independently, the composite Socratic quality score $Q$ was computed as the arithmetic mean of the five dimension scores. This equal weighting reflected the study's judgment that all five dimensions are necessary for effective Socratic tutoring; alternative weighting schemes were explored in sensitivity analyses (\cref{subsec:decision_sensitivity}) and did not materially affect model rankings. Dimension-level scores are reported in \path{data/rater_scores.csv} to support future meta-analyses and refinement of the rubric.
+
+\begin{longtable}{@{}p{3cm} p{1cm} p{10cm}@{}}
+\caption{Detailed Socratic Quality Rubric with Scoring Anchors and Examples} \label{tab:socratic_rubric_detailed} \\
+\toprule
+\textbf{Dimension} & \textbf{Score} & \textbf{Definition, Criteria, and Example} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{c}{\tablename\ \thetable\ -- continued from previous page} \\
+\toprule
+\textbf{Dimension} & \textbf{Score} & \textbf{Definition, Criteria, and Example} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{Continued on next page\ldots} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+\textbf{1. Question-Orientation} & & \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Definition:} Measures the extent to which the response privileges open-ended, guiding questions over declarative statements or direct answers. High question-orientation elicits student reasoning and metacognition; low question-orientation supplies solutions and reduces cognitive engagement.} \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Scoring rationale:} This dimension directly operationalizes the ``eliciting reasoning'' tenet of Socratic pedagogy (\cref{subsubsec:pedagogical_definition}). Responses consisting entirely of targeted questions (score 5) maximize student agency, while responses dominated by declarative content (score 1) bypass the student's reasoning process. Intermediate scores (2--4) reflect mixed strategies where questions and statements coexist.} \\
+\addlinespace
+& 5 & \textbf{Excellent:} The response consists entirely of one or more targeted, open-ended questions. It volunteers no declarative information, formulas, or procedural steps. Questions invite the student to articulate reasoning, examine assumptions, or explore implications. \\
+& & \textit{Example (student uses final velocity incorrectly):} \\
+& & \textit{``That's a great start! Let me ask you this: does the formula $P = F \cdot v$ apply when the velocity is changing, or only when it's constant? How might the changing velocity affect your calculation?''} \\
+& & \textit{Scoring note:} Even brief affirmations (``That's a great start!'') are acceptable if they precede substantive questions. The key criterion is the absence of declarative content that preempts student thinking. \\
+\addlinespace
+& 3 & \textbf{Adequate:} The response mixes questions with declarative statements. It may provide a partial hint, define a term, or reference a formula before posing a question. The balance tilts toward questions, but declarative content is present. \\
+& & \textit{Example (student overlooks rotational energy):} \\
+& & \textit{``You've accounted for translational kinetic energy, which is good. Remember that rotating objects also have kinetic energy. What type of kinetic energy might the wheels have?''} \\
+& & \textit{Scoring note:} The declarative reminder (``rotating objects also have kinetic energy'') provides a conceptual hint before the question. This is pedagogically useful but reduces the student's opportunity for independent discovery. \\
+\addlinespace
+& 1 & \textbf{Poor:} The response provides a direct answer, a complete formula, or step-by-step instructions. It asks no meaningful questions or relegates questions to superficial follow-ups (e.g., ``Does that make sense?''). \\
+& & \textit{Example (student miscalculates power):} \\
+& & \textit{``That's incorrect. You should use the work-energy theorem: $W = \Delta KE = \frac{1}{2} m (v_f^2 - v_i^2)$. Then divide by time to get average power: $P_{\text{avg}} = \frac{W}{t}$. Does that make sense?''} \\
+& & \textit{Scoring note:} The response supplies the complete solution method. The trailing question (``Does that make sense?'') is a formality and does not elicit reasoning. \\
+\midrule
+
+\textbf{2. Relevance} & & \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Definition:} Assesses whether the questions or prompts are directly responsive to the student's current statement, misconception, or reasoning step. High relevance indicates precision targeting of the student's conceptual gap; low relevance indicates generic or off-topic probes.} \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Scoring rationale:} Relevance operationalizes the ``alignment with student needs'' principle. A relevant question meets the student where they are, addressing the specific error or partial understanding evident in their statement. Irrelevant questions waste cognitive effort and may confuse or frustrate the student. This dimension is critical for ensuring that Socratic exchanges are efficient and context-sensitive.} \\
+\addlinespace
+& 5 & \textbf{Excellent:} The question is precisely targeted at the core of the student's error, misconception, or the immediate next logical step in their reasoning. The question reflects deep understanding of the student's current mental model. \\
+& & \textit{Example (student uses final velocity for power throughout acceleration):} \\
+& & \textit{``Good thought! Is the car moving at that final velocity for the entire duration of the acceleration, or does it start slower and speed up?''} \\
+& & \textit{Scoring note:} The question directly addresses the conceptual flaw (assuming constant velocity during acceleration) without revealing the correct approach. \\
+\addlinespace
+& 3 & \textbf{Adequate:} The question is related to the topic but is overly broad, generic, or does not directly confront the specific flaw in the student's reasoning. It may be tangentially helpful but lacks precision. \\
+& & \textit{Example (student uses final velocity incorrectly):} \\
+& & \textit{``What other types of energy are involved in this system?''} \\
+& & \textit{Scoring note:} While energy considerations are relevant to the problem, the question does not address the student's specific error (velocity assumption). It is a generic prompt that could apply to many contexts. \\
+\addlinespace
+& 1 & \textbf{Poor:} The question is irrelevant, confusing, or completely off-topic relative to the student's statement. It may distract from the core issue or introduce unrelated concepts. \\
+& & \textit{Example (student uses final velocity incorrectly):} \\
+& & \textit{``Have you considered the material properties of the car's wheels?''} \\
+& & \textit{Scoring note:} Material properties are irrelevant to the velocity-power relationship error. This question derails the student's focus. \\
+\midrule
+
+\textbf{3. Scaffolding Depth} & & \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Definition:} Evaluates the model's ability to decompose a complex reasoning task into a logical sequence of smaller, manageable steps. High scaffolding depth provides just enough support to enable the next incremental insight; low scaffolding depth either overwhelms the student with complexity or oversimplifies to the point of trivializing the task.} \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Scoring rationale:} Scaffolding operationalizes the ``zone of proximal development'' concept: effective tutors provide questions that are neither too far ahead (causing confusion) nor too elementary (causing disengagement). This dimension is particularly critical for estimation problems, which inherently require multi-step reasoning. Optimal scaffolding (score 5) identifies the single most logical next question; poor scaffolding (score 1) leaps to the final answer or asks trivial questions.} \\
+\addlinespace
+& 5 & \textbf{Excellent:} The question is perfectly scaffolded, breaking down a complex problem into the single, most logical next sub-question for the student to consider. The question builds directly on the student's current understanding and prepares the ground for subsequent steps. \\
+& & \textit{Example (student has identified forces acting on car):} \\
+& & \textit{``Okay, you've identified the forces. What's the very next step to calculate the total work done by those forces?''} \\
+& & \textit{Scoring note:} The question isolates the immediate next step (work calculation) without skipping intermediate reasoning or revealing the full solution path. \\
+\addlinespace
+& 3 & \textbf{Adequate:} The question is helpful but skips one or more logical intermediate steps, potentially confusing the student or requiring them to make conceptual leaps without support. Alternatively, the question may be too elementary, failing to challenge the student appropriately. \\
+& & \textit{Example (student has identified forces):} \\
+& & \textit{``Now that you have the forces, can you write the final equation for average power including rotational effects?''} \\
+& & \textit{Scoring note:} The question jumps from force identification to the final power equation, skipping work calculation, energy considerations, and the integration of rotational effects. This is a large conceptual leap. \\
+\addlinespace
+& 1 & \textbf{Poor:} The question is a massive leap in logic, demands the complete solution, or is so trivial that it provides no scaffolding value. It either overwhelms or insults the student's cognitive capacity. \\
+& & \textit{Example (student has identified forces):} \\
+& & \textit{``You have the forces. Now derive the entire dynamical model for the car, including all energy transformations and dissipative effects.''} \\
+& & \textit{Scoring note:} This demands a comprehensive solution without any intermediate scaffolding. Alternatively, a trivial question like ``Do forces exist?'' would also score 1. \\
+\midrule
+
+\textbf{4. Clarity \& Tone} & & \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Definition:} Measures the linguistic clarity, conciseness, and affective tone of the response. High clarity \& tone indicates the response is easy to understand, uses appropriate vocabulary, and maintains an encouraging, supportive, collaborative tone. Low clarity \& tone indicates confusing phrasing, condescension, or discouragement.} \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Scoring rationale:} Affective factors are critical to learning outcomes; students disengage from tutors perceived as condescending or unclear. This dimension operationalizes the ``supportive learning environment'' requirement in \cref{subsubsec:pedagogical_definition}. Clarity ensures cognitive accessibility; tone ensures emotional safety. Both are necessary for sustained Socratic dialogue.} \\
+\addlinespace
+& 5 & \textbf{Excellent:} The response is clear, concise, and uses positive, encouraging language. The tone is collaborative (``we're thinking through this together'') and supportive (``you're on the right track''). Vocabulary is appropriate for the student's level. \\
+& & \textit{Example:} \\
+& & \textit{``You're on the right track! That's a really good insight. What happens if we consider that idea a bit further—does the velocity stay constant while the car accelerates?''} \\
+& & \textit{Scoring note:} The affirmation (``really good insight'') is specific and genuine. The question is phrased collaboratively (``we consider'') and uses accessible language. \\
+\addlinespace
+& 3 & \textbf{Adequate:} The response is clear and grammatically correct but has a neutral or robotic tone. It is neither encouraging nor discouraging; it simply states facts or poses questions without warmth or enthusiasm. \\
+& & \textit{Example:} \\
+& & \textit{``Your statement is noted. What is the next step in your calculation?''} \\
+& & \textit{Scoring note:} Functionally clear but affectively flat. The phrase ``Your statement is noted'' is bureaucratic rather than pedagogical. \\
+\addlinespace
+& 1 & \textbf{Poor:} The response is unclear, verbose, uses jargon inappropriately, or adopts a condescending or discouraging tone. It may dismiss the student's effort, use sarcasm, or imply the student should have known better. \\
+& & \textit{Example:} \\
+& & \textit{``No, that's obviously wrong. You clearly didn't pay attention to the definition of instantaneous versus average power, which we covered in the prerequisites. Let's start over from the basics.''} \\
+& & \textit{Scoring note:} The tone is dismissive (``obviously wrong,'' ``clearly didn't pay attention''). The response undermines the student's confidence and violates the supportive ethos of Socratic pedagogy. \\
+\midrule
+
+\textbf{5. Factual Correctness} & & \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Definition:} Assesses the factual and conceptual accuracy of any implicit or explicit information embedded within the model's questions or statements. High correctness indicates all assumptions, hints, and implications are accurate; low correctness indicates the model guides the student toward erroneous conclusions or embeds misleading premises.} \\
+\addlinespace
+\multicolumn{3}{@{}p{14cm}@{}}{\textit{Scoring rationale:} Even Socratic questions carry implicit assumptions and implications. A question like ``What type of kinetic energy might the wheels have?'' implicitly asserts that wheels possess kinetic energy, a factually correct statement. Incorrect implicit information (score 1) can entrench misconceptions and undermine the entire learning interaction. This dimension ensures that pedagogical effectiveness is not achieved at the cost of factual integrity.} \\
+\addlinespace
+& 5 & \textbf{Excellent:} All implicit assumptions, numerical values, physical principles, and conceptual claims embedded within the model's response are factually and conceptually correct. The question may guide the student toward correct conclusions without stating them directly. \\
+& & \textit{Example (student has calculated translational kinetic energy only):} \\
+& & \textit{``You've accounted for the translational kinetic energy. Is there any other type of kinetic energy the car might have, especially considering that its wheels are rotating?''} \\
+& & \textit{Scoring note:} The question correctly implies that (i) rotational kinetic energy exists, (ii) it is distinct from translational kinetic energy, and (iii) it is relevant to the car's motion. All implications are factually sound. \\
+\addlinespace
+& 3 & \textbf{Adequate:} The question is pedagogically useful and mostly accurate, but contains a minor, non-critical factual error or conceptual imprecision. The error does not fundamentally mislead the student but could cause momentary confusion. \\
+& & \textit{Example:} \\
+& & \textit{``What about the force from air pressure acting on the car?''} \\
+& & \textit{Scoring note:} The question likely intends to prompt consideration of air resistance (drag), but phrases it as ``air pressure,'' which is conceptually imprecise. Air pressure is uniform around the car; drag arises from differential pressure and viscosity. This is a minor terminological error. \\
+\addlinespace
+& 1 & \textbf{Poor:} The question contains a significant factual error, a misleading premise, or guides the student toward an incorrect conclusion. The error is consequential and could entrench misconceptions. \\
+& & \textit{Example (student discusses frictional force during acceleration):} \\
+& & \textit{``Since the car is accelerating, does that mean the frictional force is also increasing proportionally with velocity?''} \\
+& & \textit{Scoring note:} This incorrectly suggests a direct, proportional relationship between acceleration and friction, which is false. Kinetic friction depends on normal force and surface properties, not velocity or acceleration. This misleads the student. \\
+
+\end{longtable}
+
+\paragraph{Interpretation guidelines for raters.} Raters were instructed to apply the following decision heuristics when scoring ambiguous cases:
+
+\begin{itemize}
+	\item \textbf{Benefit of the doubt for minor flaws:} If a response is otherwise excellent but contains a trivial grammatical error or a single suboptimal word choice, raters were instructed to assign a score of 4 rather than penalizing to 3, provided the error did not materially affect clarity or correctness.
+	\item \textbf{Holistic judgment for mixed responses:} When a response contains both high-quality and low-quality elements (e.g., one excellent question followed by a declarative statement), raters scored based on the dominant pattern. If the declarative content was brief and non-revealing (e.g., a definition), the response could still score 4 on question-orientation; if the declarative content preempted reasoning, the score dropped to 2--3.
+	\item \textbf{Context-sensitive relevance scoring:} Relevance was judged relative to the student's statement and the problem context. A question that would be highly relevant in one scenario (e.g., ``What forces act on the car?'') might be irrelevant in another if the student had already enumerated forces. Raters were instructed to consider the conversational history when available.
+	\item \textbf{Severity weighting for correctness:} Minor factual errors (e.g., unit inconsistencies, rounding discrepancies) resulted in scores of 3--4; major conceptual errors (e.g., conflating force and energy) resulted in scores of 1--2. Raters distinguished between ``pedagogically useful imprecision'' (acceptable) and ``misleading falsehoods'' (unacceptable).
+\end{itemize}
+
+\paragraph{Limitations and future refinement.} While the rubric achieved acceptable IRR, several limitations were noted. First, the equal weighting of dimensions in the composite score $Q$ may not reflect the relative importance of each dimension; future work could explore empirically derived weights. Second, the rubric does not explicitly score \textit{adaptivity across turns}—the ability to adjust questioning based on the student's evolving understanding—because most benchmark interactions were two-turn exchanges (\cref{sec:experiments}). Multi-turn evaluation would require extending the rubric with session-level constructs. Third, the binary adjudication threshold (difference $\geq 2$) is somewhat arbitrary; sensitivity analyses using thresholds of 1.5 and 2.5 did not materially change IRR estimates or model rankings (\cref{subsec:decision_sensitivity}), suggesting robustness. Finally, the rubric is domain-specific to engineering estimation; generalization to other STEM domains (e.g., proofs in mathematics) would require recalibration of scoring anchors and examples.

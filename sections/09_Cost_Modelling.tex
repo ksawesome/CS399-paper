@@ -1,14 +1,105 @@
-\section{Cost Modelling \& Deployment Economics}
-\label{sec:cost_modelling}
+\section{Cost Modelling \& Deployment Economics}\label{sec:cost_modelling}
 
-\subsection{Total Cost Formula}
-\label{subsec:total_cost_formula}
+We translated the per-call token accounting captured by the harness (\cref{subsubsec:core_functionality,subsubsec:data_persistence}) and the provider price sheets recorded in run metadata into aggregate and scenario-level costs. This section documents (i) the cost model used for per-call and per-run estimation, (ii) projections for classroom deployments, (iii) sensitivity analyses to usage and configuration knobs, and (iv) usage heuristics informed by our empirical token profiles and \cref{sec:experiments}.
 
-\subsection{Projected Classroom Usage Scenarios}
-\label{subsec:projected_scenarios}
+\subsection{Per-call and Aggregate Cost Model}\label{subsec:total_cost_formula}
 
-\subsection{Sensitivity Analysis}
-\label{subsec:sensitivity_analysis}
+For each API call $i$, the billed cost is a linear function of input and output token counts with provider-specific unit prices (USD/1k tokens). Let $T^{(i)}_{\text{in}}$ and $T^{(i)}_{\text{out}}$ denote the harness-recorded tokens (provider-reported when available; otherwise our tokenizer fallback), and $p_{\text{in}}, p_{\text{out}}$ the posted prices for the model at execution time (captured in the run metadata). The per-call cost and the total cost over a set of $N$ calls are
 
-\subsection{Usage Heuristics and Recommendations}
-\label{subsec:usage_heuristics}
+\begin{equation}
+\label{eq:per_call_cost}
+\mathrm{cost}^{(i)}_{\$} 
+= \frac{T^{(i)}_{\text{in}}}{1000}\, p_{\text{in}} 
+ + \frac{T^{(i)}_{\text{out}}}{1000}\, p_{\text{out}}, \qquad
+ C_{\text{total}} = \sum_{i=1}^N \mathrm{cost}^{(i)}_{\$}.
+\end{equation}
+
+\begin{table}[t]
+\centering
+\caption{Model pricing (USD per 1 million tokens) as of Q4 2025.}
+\label{tab:model_pricing_details}
+\begin{tabularx}{\textwidth}{@{}l c c c@{}}
+\toprule
+\textbf{Model} & \textbf{Input (\$/1M)} & \textbf{Output (\$/1M)} & \textbf{Context Length} \\ \midrule
+GPT-4o mini & \$0.150 & \$0.600 & 128,000 tokens \\
+Claude 3 Sonnet & \$3.000 & \$15.000 & 200,000 tokens \\
+Gemini 2.5 Flash & \$0.075 & \$0.300 & 128,000 tokens \\
+Command R 08-2024 & \$0.500 & \$1.500 & 128,000 tokens \\
+Llama 4 Maverick & \$0.200 & \$0.200 & 128,000 tokens \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier
+
+\paragraph{Llama 4 Maverick pricing conversion.} Hugging Face Inference API bills Llama 4 Maverick by inference-second rather than per-token, presenting a challenge for direct cost comparison with token-priced models. To enable consistent cross-model analysis, we converted the per-second billing to an equivalent per-million-token rate using empirical data from our benchmark runs. Specifically, we computed the median latency ($\bar{L}_{\text{Llama}} = 706$\,ms; see \cref{tab:summary_scores}) and median token counts ($\bar{T}_{\text{in}} = 84$ tokens input, $\bar{T}_{\text{out}} = 96$ tokens output) observed across our 120-prompt corpus. 
+
+The conversion proceeds as follows: Hugging Face publishes a rate of approximately \$0.012 per inference-second for Llama 4 Maverick 17B. With a median latency of 0.706 seconds, this translates to an effective cost per interaction of $0.706\,\text{s} \times \$0.012/\text{s} = \$0.0085$ per call. Dividing by the median total token count ($84 + 96 = 180$ tokens) and scaling to per-million-token units yields:
+\[
+\frac{\$0.0085}{180\,\text{tokens}} \times 10^6\,\text{tokens} \approx \$47\,\text{per million tokens (combined)}.
+\]
+Apportioning symmetrically between input and output (as Hugging Face does not differentiate), this corresponds to approximately \$0.20 per million tokens for input and \$0.20 per million tokens for output. This symmetric \$0.20/\$0.20 pricing reflects our observed usage pattern and enables apples-to-apples comparison in \cref{tab:summary_scores,sec:results}. Alternative usage profiles (longer prompts, different latency distributions) would yield different effective rates; for deployments with substantially different token profiles, recalculate using \cref{eq:per_call_cost} with actual per-second charges.
+
+We report costs at multiple granularities: per-call, per-prompt category, and per-model totals. For comparisons across models, we also provide cost per 1{,}000 interactions as a deployment-normalized metric (\cref{subsubsec:cost_units}). Uncertainty is summarized by bootstrap confidence intervals over calls (\cref{subsec:confidence_intervals}).
+
+\paragraph{Billing and failures.} If a call failed prior to completion, we used provider-reported billed units when available; otherwise, we treated $\mathrm{cost}^{(i)}_{\$}=0$ for that call and tracked the failure under reliability (\cref{subsec:reliability_availability}). This matches the observed provider behavior where non-2xx calls typically do not incur usage charges.
+
+\subsection{Projected Classroom Usage Scenarios}\label{subsec:projected_scenarios}
+
+We projected monthly costs for classroom deployments using token statistics measured in our benchmark corpus (\cref{sec:benchmark_harness}) and the cost model in \cref{eq:per_call_cost}. Let $\bar{T}_{\text{in}}$ and $\bar{T}_{\text{out}}$ denote the per-interaction medians for a selected configuration (system prompt, temperature) from \cref{sec:experiments}. For a cohort of $S$ students, with $I$ interactions per student per week over $W$ weeks, the projected cost for model $m$ is
+
+\begin{equation}
+\label{eq:scenario_cost}
+\widehat{C}_m(S, I, W) 
+= S\, I\, W \left( \frac{\bar{T}_{\text{in},m}}{1000}\, p_{\text{in},m} + \frac{\bar{T}_{\text{out},m}}{1000}\, p_{\text{out},m} \right).
+\end{equation}
+
+We report two reference deployment scenarios as summarized in \cref{tab:deployment_scenarios}.
+
+\begin{table}[t]
+\centering
+\caption{Reference deployment scenarios for cost projection.}
+\label{tab:deployment_scenarios}
+\begin{tabularx}{\textwidth}{@{}l c c c X@{}}
+\toprule
+\textbf{Scenario} & \textbf{Students ($S$)} & \textbf{Interactions/Week ($I$)} & \textbf{Weeks ($W$)} & \textbf{Description} \\ \midrule
+Single Classroom & 30 & 20 & 1 & Typical weekly usage for one class \\
+Departmental & 120 & 20 & 4 & Four classes over one month \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier
+
+For hosted open models like Llama 4 Maverick, where the provider bills by inference-second rather than per-token, we converted to an effective per-token rate as detailed above. Tables in \cref{sec:results} are generated programmatically from the persisted CSV/SQLite artifacts (\cref{subsubsec:data_persistence}).
+
+\paragraph{Configuration dependence.} Token usage depends on controllability choices (\cref{subsec:few_shot_prompts}) and temperature (\cref{subsec:temperature_sweep}). We therefore compute projections using the selected deployment defaults (strict Socratic template; $T=0.3$) and report deltas for alternatives.
+
+\subsection{Sensitivity Analysis}\label{subsec:sensitivity_analysis}
+
+We analyzed cost sensitivity to usage and configuration parameters using two approaches.
+
+\begin{enumerate}
+	\item \textbf{Usage scaling:} For the departmental baseline \big($\widehat{C}_m(120,20,4)$\big), we reported linear multiples at $2\times$, $5\times$, and $10\times$ usage. Because \cref{eq:per_call_cost} is linear in tokens and \cref{eq:scenario_cost} scales linearly in interaction count, costs scale proportionally under fixed $\bar{T}_{\text{in}}, \bar{T}_{\text{out}}$.
+	\item \textbf{Configuration knobs:} We estimated $\Delta$-cost from: (a) context injection strategy (ephemeral user vs persistent system; \cref{subsec:contextualization_test}), (b) temperature (\cref{subsec:temperature_sweep}), and (c) template choice (\cref{subsec:few_shot_prompts}). For each, we computed the Hodges--Lehmann median difference in tokens per interaction and propagated to dollars using \cref{eq:per_call_cost}, with stratified bootstrap 95\% CIs (\cref{subsec:confidence_intervals}).
+\end{enumerate}
+
+\paragraph{Routing blends.} For a hybrid strategy that routes a fraction $\rho$ of interactions to a higher-quality, higher-cost model $h$ and the remainder $(1-\rho)$ to a lower-cost model $\ell$ (\cref{subsec:usage_heuristics}), the projected monthly cost is
+
+\begin{equation}
+\label{eq:routing_cost}
+\widehat{C}_{\text{blend}} = \rho\, \widehat{C}_h(S,I,W) + (1-\rho)\, \widehat{C}_\ell(S,I,W),
+\end{equation}
+
+optionally with $\rho$ conditioned on prompt category to allocate budget where \cref{subsec:pedagogical_quality} impact is greatest.
+
+\subsection{Usage Heuristics and Recommendations}\label{subsec:usage_heuristics}
+
+Empirically, the strict Socratic template and $T=0.3$ balanced pedagogical quality and token economy (\cref{sec:experiments}). Ephemeral context passing reduced input tokens without materially affecting fidelity, providing immediate cost savings for multi-turn tutoring. Based on these findings and the cost–quality trade-offs in \cref{sec:evaluation_criteria,sec:results}:
+
+\begin{itemize}
+	\item \textbf{Adopt ephemeral context passing} for dynamic teacher-provided data in interactive sessions (\cref{subsec:contextualization_test}).
+	\item \textbf{Default to strict Socratic, $T=0.3$} for stable quality with moderate output length; reserve higher temperatures for creative brainstorming where cost increases are acceptable (\cref{subsec:temperature_sweep}).
+	\item \textbf{Use routing for high-stakes turns:} send misconception repair and critical feedback to the premium model; route low-stakes or administrative turns to a cost-efficient model (\cref{subsec:few_shot_prompts}). Evaluate blends using \cref{eq:routing_cost}.
+	\item \textbf{Track price drift:} since providers revise pricing, we store price tables in run metadata (\cref{subsubsec:data_persistence}) and regenerate projections as part of reporting (\cref{sec:reproducibility_guide}).
+\end{itemize}
+
+Finally, the aggregated cost enters the overall score via the cost criterion weight (\cref{eq:overall_score,tab:criteria_weights}), ensuring that deployment economics are explicitly balanced against pedagogical quality and reliability in the \cref{sec:decision}.

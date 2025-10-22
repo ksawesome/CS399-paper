@@ -1,0 +1,65 @@
+\section{Glossary of Terms}\label{app:glossary}
+
+This glossary defines technical and pedagogical terms used throughout the paper. Definitions are written for accessibility to interdisciplinary readers, including educators, computer scientists, and policy researchers who may not have specialized expertise in machine learning or Socratic pedagogy.
+
+\begin{description}[style=nextline,leftmargin=0em,itemsep=1em]
+
+\item[\textbf{API (Application Programming Interface)}] A software interface that allows one program to request services from another. In this study, we used APIs provided by OpenAI, Anthropic, Google, Cohere, and Hugging Face to send prompts to large language models and receive generated text responses over the internet. APIs abstract away the complexity of model inference, enabling standardized access via HTTP requests.
+
+\item[\textbf{Anthropic Claude}] A family of large language models developed by Anthropic PBC, emphasizing safety and harmlessness through Constitutional AI training methods. Claude 3 Sonnet, evaluated in this study, is a mid-tier model in the Claude 3 series, balancing capability and cost. Claude models use a context window of up to 200,000 tokens.
+
+\item[\textbf{Benchmark Harness}] The custom Python software framework developed for this study to automate the execution of benchmark experiments. The harness manages API calls, logs telemetry data (latency, token counts, costs), handles rate limiting and error recovery, and persists results to CSV and SQLite databases. See \cref{sec:benchmark_harness,app:harness_implementation} for detailed architecture.
+
+\item[\textbf{Cohere Command R}] A large language model developed by Cohere, optimized for conversational AI and retrieval-augmented generation (RAG) workflows. The Command R 08-2024 variant evaluated in this study is designed for production deployments requiring high throughput and multilingual support.
+
+\item[\textbf{Context Fidelity}] An evaluation dimension defined in \cref{sec:evaluation_criteria} to measure how accurately an AI model's response reflects the specific details, constraints, and requirements presented in the user's prompt. High context fidelity indicates that the model attended carefully to contextual nuances rather than generating generic or hallucinated content. Operationalized with a 5-point rubric in \cref{app:context_fidelity_rubric}.
+
+\item[\textbf{Context Window}] The maximum number of tokens (input plus output) that a language model can process in a single request. Context windows vary by model; for example, GPT-4o mini supports 128,000 tokens, while older models like GPT-3.5 supported only 4,096 tokens. Longer context windows enable models to handle more extensive prompts, larger documents, or lengthy conversational histories without truncation.
+
+\item[\textbf{Fine-Tuning}] A machine learning technique where a pre-trained language model's parameters are further adjusted using task-specific training data. Fine-tuning adapts a general-purpose model to perform specialized tasks more effectively. In this study, we evaluated base models without fine-tuning to assess their out-of-the-box capabilities for Socratic dialogue.
+
+\item[\textbf{Gemini}] A family of multimodal large language models developed by Google DeepMind, capable of processing text, images, audio, and video. Gemini 2.5 Flash, evaluated in this study, is an efficient variant optimized for low-latency, high-throughput applications. Gemini models are tightly integrated with Google's infrastructure, enabling features like native tool use and grounding via Google Search.
+
+\item[\textbf{GPT (Generative Pre-trained Transformer)}] A family of language models developed by OpenAI, built on the transformer architecture introduced by Vaswani et al. (2017). GPT models are pre-trained on diverse internet text using unsupervised learning, then fine-tuned for instruction following. GPT-4o mini, evaluated in this study, is a cost-optimized variant of GPT-4o, balancing performance and affordability for high-volume applications.
+
+\item[\textbf{Hallucination}] A phenomenon where a language model generates plausible-sounding but factually incorrect, nonsensical, or fabricated content. Hallucinations arise from the model's reliance on statistical patterns in training data rather than grounded knowledge or reasoning. In educational contexts, hallucinations are particularly problematic because they can mislead learners. See \cref{sec:safety} for our PII sanitization and hallucination mitigation strategies.
+
+\item[\textbf{Inter-Rater Reliability (IRR)}] A statistical measure quantifying the consistency of judgments across multiple human raters evaluating the same items. High IRR (e.g., Cronbach's $\alpha > 0.8$) indicates that raters applied evaluation criteria consistently, lending credibility to aggregated scores. We computed IRR for Socratic Quality and Context Fidelity rubrics using Cronbach's alpha and intra-class correlation (ICC), as detailed in \cref{app:socratic_quality_rubric,app:context_fidelity_rubric}.
+
+\item[\textbf{Latency}] The elapsed time between sending a request to a language model API and receiving the complete response. Measured in seconds, latency encompasses network transmission time, server queuing, model inference, and response streaming. Latency is a critical metric for real-time applications like tutoring systems; high latency disrupts conversational flow and degrades user experience. We measured end-to-end latency for each API call and report median and 95th percentile values in \cref{sec:results}.
+
+\item[\textbf{LLM (Large Language Model)}] A neural network model trained on vast quantities of text data (billions to trillions of tokens) to predict and generate coherent natural language text. LLMs leverage the transformer architecture, which uses self-attention mechanisms to model long-range dependencies in sequences. Models like GPT-4o, Claude 3, and Gemini 2.5 are considered "large" due to their parameter counts (hundreds of billions) and training data scale (trillions of tokens). LLMs excel at open-ended generation, instruction following, and few-shot learning.
+
+\item[\textbf{Llama}] A family of open-weight large language models developed by Meta AI Research, released under permissive licenses enabling academic and commercial use. Llama models are notable for their transparency (weights and training details are published) and performance competitive with proprietary models. Llama 4 Maverick, evaluated in this study, is a hypothetical next-generation variant hosted on Hugging Face's Inference API.
+
+\item[\textbf{Pedagogical Coherence}] An evaluation dimension defined in \cref{sec:evaluation_criteria} to assess whether an AI tutor's response maintains a logically structured, goal-oriented, and pedagogically sound progression toward learning objectives. High pedagogical coherence indicates that the response builds conceptual scaffolds, sequences explanations appropriately, and avoids tangential or disjointed content. Operationalized with a 5-point rubric as part of the Socratic Quality assessment.
+
+\item[\textbf{Prompt Engineering}] The practice of crafting input prompts (text instructions) to elicit desired behaviors from language models. Effective prompt engineering involves specifying context, constraints, formatting requirements, and examples (few-shot learning). In this study, we designed a bank of 120 prompts representing diverse tutoring scenarios, carefully controlling variables like prompt length, complexity, and domain (see \cref{app:prompt_bank}).
+
+\item[\textbf{RAG (Retrieval-Augmented Generation)}] A technique combining information retrieval (e.g., searching a document database) with language model generation. RAG systems retrieve relevant documents or passages in response to a user query, then provide those documents as context to the LLM, which synthesizes a grounded response. RAG reduces hallucination by anchoring generation in factual sources, making it valuable for knowledge-intensive applications like tutoring.
+
+\item[\textbf{Rate Limiting}] A throttling mechanism imposed by API providers to control request volume and prevent abuse. Rate limits are specified as maximum requests per minute (e.g., OpenAI enforces 500 RPM for GPT-4o mini on tier-3 accounts). Exceeding rate limits results in HTTP 429 "Too Many Requests" errors. Our harness implements exponential backoff and cooldown timers to respect rate limits without manual intervention (see \cref{app:harness_implementation}).
+
+\item[\textbf{Socratic Dialogue}] A teaching method attributed to the ancient Greek philosopher Socrates, characterized by asking carefully sequenced questions to guide learners toward discovering insights independently rather than providing direct answers. Socratic pedagogy emphasizes critical thinking, self-reflection, and conceptual exploration. In AI tutoring, Socratic dialogue involves models posing probing questions, acknowledging student reasoning, and scaffolding progressively deeper inquiry.
+
+\item[\textbf{Socratic Quality}] A composite evaluation dimension defined in \cref{sec:evaluation_criteria} to measure the extent to which an AI tutor's response embodies principles of Socratic pedagogy. Socratic Quality aggregates five subdimensions: \textit{Question Framing} (clarity and relevance of questions posed), \textit{Pedagogical Coherence} (logical progression toward learning objectives), \textit{Conceptual Depth} (engagement with underlying principles rather than surface-level facts), \textit{Student Autonomy} (encouragement of independent reasoning), and \textit{Adaptive Scaffolding} (responsiveness to implied student knowledge level). Operationalized with detailed rubrics in \cref{app:socratic_quality_rubric}.
+
+\item[\textbf{System Prompt}] An initial instruction provided to a language model at the beginning of a conversation, setting behavioral guidelines, role definitions, and output formatting constraints. System prompts are typically hidden from end users but strongly influence model behavior. In this study, we used a fixed system prompt instructing models to act as Socratic tutors, avoiding direct answers and prioritizing inquiry-based guidance (see \cref{app:prompt_bank}).
+
+\item[\textbf{Temperature (Sampling Parameter)}] A hyperparameter controlling randomness in language model text generation. Lower temperature values (e.g., 0.0) produce deterministic, high-probability outputs; higher values (e.g., 1.0) increase diversity and creativity but risk incoherence. Temperature is implemented during sampling from the model's probability distribution over next tokens. For this study, we set temperature to 0.3 to balance consistency and natural variation (see \cref{sec:candidate_models}).
+
+\item[\textbf{Token}] The atomic unit of text processing in language models. Tokens are subword fragments produced by tokenization algorithms like Byte-Pair Encoding (BPE). For example, the phrase "Hello, world!" might tokenize as \texttt{["Hello", ",", " world", "!"]}. Token counts determine input/output costs and context window occupancy. Typical English text averages about 1.3 tokens per word. Cost calculations in \cref{sec:cost_modelling} are denominated in tokens per million.
+
+\item[\textbf{Transformer Architecture}] The neural network architecture underlying modern large language models, introduced by Vaswani et al. (2017) in "Attention Is All You Need." Transformers use self-attention mechanisms to model relationships between all tokens in a sequence in parallel, enabling efficient training and capturing long-range dependencies. The transformer architecture replaced earlier recurrent neural networks (RNNs) and has become the dominant paradigm for NLP since 2018.
+
+\end{description}
+
+\paragraph{Further reading.} For readers seeking deeper technical background on large language models and their applications in education, we recommend:
+\begin{itemize}
+\item \textbf{Foundational transformer paper}: Vaswani et al., "Attention Is All You Need," \textit{NeurIPS} 2017.
+\item \textbf{GPT architecture}: Brown et al., "Language Models are Few-Shot Learners," \textit{NeurIPS} 2020.
+\item \textbf{AI in education survey}: Holmes et al., "Artificial Intelligence In Education," \textit{Nature Reviews Education} 2022.
+\item \textbf{Socratic pedagogy}: Paul, R., \& Elder, L., "The Art of Socratic Questioning," \textit{Foundation for Critical Thinking} 2007.
+\end{itemize}
+
+These resources provide comprehensive overviews of the technical and pedagogical foundations underpinning this study.

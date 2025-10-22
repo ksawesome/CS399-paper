@@ -1,0 +1,42 @@
+\subsection{Prompt Taxonomy and Category Definitions}
+\label{app:prompts_taxonomy}
+
+To resolve potential ambiguity in earlier drafts, we adopt an explicit two-dimensional labeling scheme for the 120 prompts: every prompt has both a \textbf{Topic Category} and an \textbf{Intent Category}. Topic Categories identify the curricular or domain strand (used for topic-level analyses such as per-category win counts and curriculum-aligned visualizations). Intent Categories encode the pedagogical interaction style or evaluation intent (used to ensure pedagogical diversity and to drive rubric-focused analyses such as Socratic-quality breakdowns and refusal-rate summaries). Both labels are stored in the harness input JSON as \texttt{topic\_category} and \texttt{intent\_category}.
+
+The Topic Categories (used in figures like \cref{fig:category_wins}) are:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Applied Math}
+    \item \textbf{CS Algorithms}
+    \item \textbf{CS Systems}
+    \item \textbf{History \& Civics}
+    \item \textbf{Instructional Design}
+    \item \textbf{Language Learning}
+    \item \textbf{Literature Analysis}
+    \item \textbf{Numeracy Basics}
+    \item \textbf{Productivity \& Ops}
+    \item \textbf{Safety \& Alignment}
+    \item \textbf{Socratic Dialogue}
+    \item \textbf{STEM Physics}
+\end{itemize}
+
+The Intent Categories (used to ensure pedagogical coverage and to tag prompts for rubric-driven analyses) are:
+\begin{itemize}[leftmargin=*]
+    \item \textbf{Socratic Probing}
+    \item \textbf{Adaptive Contextualization}
+    \item \textbf{Feedback \& Improvement}
+    \item \textbf{Edge Cases \& Adversarial}
+    \item \textbf{Safety Challenges}
+    \item \textbf{Physical Estimations}
+    \item \textbf{Order-of-Magnitude Checks}
+    \item \textbf{Constraints \& Trade-offs}
+    \item \textbf{Error Detection \& Correction}
+    \item \textbf{Multi-turn Dialogue}
+    \item \textbf{Metacognitive Prompting}
+    \item \textbf{Domain Transfer}
+\end{itemize}
+
+Annotation procedure: prompts were labeled first for Topic by a domain expert, then labeled for Intent by pedagogical experts. Disagreements (rare, <5\%) were adjudicated by a third reviewer. Inter-rater reliability was assessed on a 20\% sample of prompts and exceeded acceptable thresholds for Topic labeling (Cohen's $\kappa>0.8$) and was adequate for Intent labeling (median $\kappa\approx0.6$), reflecting slightly higher subjectivity in pedagogical intent assignment.
+
+The category distribution reflects the relative importance of capabilities in Mettle's deployment context: Topic Categories align with curricular needs, while Intent Categories ensure the bank covers varied pedagogical behaviors (Socratic questioning, contextual injections, safety refusals, etc.). Both dimensions are used selectively in analyses — we explicitly state which label is used in each figure/table caption to avoid confusion.
+
+\paragraph{Note on representative subset in \cref{app:prompts_listings}.} The complete prompt listings in \cref{app:prompts_listings} present a representative subset of 50 prompts for readability. In this subset, some prompts display \texttt{topic\_category: null} where the topic label has been omitted for brevity, as these prompts serve primarily to demonstrate Intent Category diversity. The authoritative, harness-ready JSON file containing all 120 prompts with complete dual labeling (both \texttt{topic\_category} and \texttt{intent\_category} for every prompt) is archived in the project's data repository and referenced in the reproducibility guide (\cref{sec:reproducibility_guide,app:reproducibility_checklist}).

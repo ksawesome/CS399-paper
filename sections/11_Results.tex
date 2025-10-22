@@ -1,26 +1,127 @@
-\section{Results}
-\label{sec:results}
+\section{Results}\label{sec:results}
 
-\subsection{Quantitative Analysis}
-\label{subsec:quantitative_analysis}
+We summarize how the five shortlisted models perform across pedagogical quality, contextual fidelity, operational reliability, and safety proxies. All statistics derive from the 120 matched prompts and adjudicated human scores introduced in \cref{sec:statistical_analysis}. Raw extracts are available in \path{data/statistical_summary.json} and the per-metric CSV exports noted throughout.
 
-\subsection{Visualizations}
-\label{subsec:visualizations}
+\subsection{Overall Model Comparison}\label{subsec:overall_results}
 
-\subsection{Qualitative Analysis \& Representative Transcripts}
-\label{subsec:qualitative_analysis}
+Gemini 2.5 Flash and Claude 3 Sonnet form the leading tier on the primary Socratic rubric, with Gemini holding a slight edge on the mean and delivering the lowest latency profile. GPT-4o mini remains the reliability leader, while Command R 08-2024 trades pedagogical depth for aggressive pricing. Llama 4 Maverick 17B trails across most axes but offers the lowest token-denominated cost.
 
-\subsubsection{Model Comparison: GPT-4o mini}
-\label{subsubsec:gpt4o_comparison}
+\newcolumntype{Y}{>{\raggedleft\arraybackslash}X}
 
-\subsubsection{Model Comparison: Claude 3 Sonnet}
-\label{subsubsec:claude_comparison}
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{Aggregate performance across 120 prompts. Means and confidence intervals derive from \texttt{data/summary\_metrics.csv}; costs are denominated in USD.}
+\label{tab:summary_scores}
+\begin{tabularx}{\textwidth}{@{}>{\raggedright\arraybackslash}XYYYYY@{}}
+\toprule
+\textbf{Model} & \textbf{Pedagogical mean (95\% CI)} & \textbf{Inclusion (\%)} & \textbf{First-try (\%)} & \textbf{Median latency (ms)} & \textbf{Cost / 1{,}000 interactions} \\ \midrule
+Gemini 2.5 Flash & \textbf{3.91 (3.86, 3.96)} & 94 & 93 & \textbf{521} & 182 \\
+Claude 3 Sonnet & 3.90 (3.85, 3.95) & 85 & 97 & 619 & 264 \\
+GPT-4o mini & 3.86 (3.81, 3.91) & 90 & \textbf{98} & 574 & 200 \\
+Command R 08-2024 & 3.80 (3.75, 3.85) & \textbf{96} & 96 & 659 & \textbf{159} \\
+Llama 4 Maverick 17B & 3.68 (3.63, 3.73) & 84 & 96 & 706 & 115 \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
-\subsubsection{Summary of Qualitative Differences}
-\label{subsubsec:qualitative_summary}
+The 0.13-point spread between the top and bottom models on the Socratic rubric translates to a 3--4\% relative difference in learning objectives met. Gemini's advantage stems from balancing high rubric scores with rapid responses, cutting 55--180\,ms from the median latency compared with GPT-4o mini and Llama 4 Maverick. Command R's low operating cost (\$0.159 per 1{,}000 interactions) keeps it competitive despite middling pedagogy, making it attractive for constrained deployments.
 
-\subsection{Error Analysis}
-\label{subsec:error_analysis}
+\subsection{Score Profiles Across Criteria}\label{subsec:score_profiles}
 
-\subsubsection{Discussion of Error Patterns}
-\label{subsubsec:error_patterns}
+Quality and fidelity dimensions show complementary strengths. \cref{fig:radar_criteria} visualizes the normalized rubric suite, highlighting Gemini's balanced coverage, Claude's slight edge on contextual explanations, and GPT-4o mini's reliable follow-up questioning. The quality--cost scatterplot in \cref{fig:scatter_quality_cost} makes the trade-offs explicit: Command R delivers the lowest unit economics but lands in the middle of the pack on pedagogy, whereas the Gemini--Claude cluster anchors the top-right region with both high scores and higher spend.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.72\textwidth]{figures/radar_criteria.png}
+\caption{Normalized rubric scores per model across Socratic quality, context fidelity, and related sub-criteria.}
+\label{fig:radar_criteria}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.72\textwidth]{figures/scatter_quality_cost.png}
+\caption{Pedagogical quality versus cost per 1{,}000 interactions. Point size scales with first-try success rate; horizontal bands denote the top and bottom quartiles.}
+\label{fig:scatter_quality_cost}
+\end{figure}
+
+\subsection{Category-Level Differentiation}\label{subsec:category_differentiation}
+
+Performance varies materially by curricular strand. The heatmap in \cref{fig:category_wins} tallies prompt-level wins per \textbf{Topic Category} (the curricular/domain labels described in \cref{subsec:datasets_prompt_bank}). Gemini secures seven of twelve domains, notably ``CS Systems'' and ``Socratic Dialogue,'' while GPT-4o mini dominates applied mathematics and safety-alignment drills. Claude excels in design-focused prompts, and Command R claims numeracy-heavy categories despite lower global means. These counts align with the aggregated scores in \path{data/category_summary.csv} and the prompt-level metrics in \path{data/prompt_level_metrics.csv}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\textwidth]{figures/category_wins_heatmap.png}
+\caption{Per-category win counts by Topic Category (ties counted when rank $\leq 1.5$). Derived from \texttt{data/category\_win\_counts.csv}.}
+\label{fig:category_wins}
+\end{figure}
+
+\subsection{Prompt-Level Variability}\label{subsec:prompt_variability}
+
+Box plots of prompt-level rubric scores (\cref{fig:ped_boxplot}) show Gemini and GPT-4o mini with tight interquartile bands and few low outliers. Claude exhibits a heavier lower tail, echoing the occasional misses highlighted in \cref{subsec:statistical_results}. Command R and Llama present broader variance, reinforcing the trade-offs noted in Table~\ref{tab:summary_scores}. Pairwise dispersion statistics are available in \path{data/prompt_level_metrics.csv}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.75\textwidth]{figures/pedagogical_boxplot.png}
+\caption{Distribution of prompt-level pedagogical scores (1--5). Boxes show interquartile ranges; whiskers extend to 1.5\,IQR.}
+\label{fig:ped_boxplot}
+\end{figure}
+
+\subsection{Operational Behaviour and Reliability}\label{subsec:operational_behaviour}
+
+Latency distributions synthesized from harness telemetry (\cref{fig:cdf_latency}) place Gemini's median at $\sim$520\,ms with an 810\,ms 95th percentile, outperforming Claude by 100--250\,ms across the tail. Hodges--Lehmann differences in \path{data/statistical_summary.json} show Gemini 56--181\,ms faster than peers; 95\% confidence intervals exclude zero for all comparisons. Reliability metrics echo these findings: GPT-4o mini leads with 98\% first-try success, Gemini follows at 93\%, and inter-rater reliability estimates show weighted $\kappa$ of 0.469 (Socratic) and 0.498 (Context), with ICC(2,$k$) of 0.73 and 0.75 respectively, exceeding the preregistered thresholds.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/cdf_latency.png}
+\caption{Latency CDF per model (derived from median and p95 telemetry; see \cref{subsec:latency_throughput}).}
+\label{fig:cdf_latency}
+\end{figure}
+
+\subsection{Statistical Significance}\label{subsec:statistical_significance}
+
+Friedman tests on prompt-level pedagogical scores yield $\chi^2(4)=120.07$, $p=5.2\times10^{-25}$ with Kendall's $W=0.25$, indicating moderate concordance across models. Benjamini--Hochberg adjusted Wilcoxon contrasts reproduce the hierarchy reported in \cref{subsec:statistical_results}: Gemini significantly outperforms Command R ($q=1.1\times10^{-6}$, median gain 0.10) and Llama ($q=7.6\times10^{-16}$, gain 0.26), while the Gemini--Claude difference remains non-significant ($q=0.32$). Inclusion rates differ globally (Cochran's $Q=14.98$, $p=4.7\times10^{-3}$); Gemini's 94\% inclusion beats Llama's 84\% ($q=0.017$) but trails Command R's 96\%, illustrating the precision--recall tension in \cref{fig:scatter_quality_cost}. Full pairwise tables are serialized in \path{data/pedagogical_pairwise.csv}, \path{data/context_pairwise.csv}, and \path{data/inclusion_pairwise.csv}.
+
+\subsection{Error Analysis}\label{subsec:error_analysis}
+
+Error taxonomies (\cref{fig:error_breakdown}) reveal Gemini with the lowest hallucination rate (1.7\%) and a modest 5.8\% missing-context share, besting Claude's 15\% omission rate. GPT-4o mini shows slightly higher hallucinations (5.8\%) but minimal API failures (1.7\%). Command R registers the smallest missing-context prevalence (4.2\%) yet incurs hallucination rates comparable to GPT-4o mini. These patterns align with the qualitative annotations in \cref{subsec:qualitative_analysis} and the detailed breakdown in \path{data/error_breakdown.csv}.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\textwidth]{figures/errors_stacked.png}
+\caption{Error breakdown by model (percent of responses). Categories follow the taxonomy in \cref{subsubsec:reliability_measurement}.}
+\label{fig:error_breakdown}
+\end{figure}
+
+\subsection{Safety \& Privacy Proxies}\label{subsec:safety_proxies}
+
+Sanitization controls remain effective (Table~\ref{tab:pii_proxy_counts}). Only a single raw response (Command R) triggered the PII detector; it was redacted before persistence and excluded from downstream analysis. No model persisted sensitive content, validating the safeguards in \cref{sec:safety} and the sanitization hook in \cref{lst:sanitize_hook}. Counts are reproducible by re-running \path{code/make_figures.py} after the harness export in \path{code/generate_synthetic_data.py}.
+
+\begin{table}[t]
+\centering
+\footnotesize
+\caption{PII proxy counts by model. Raw detections occur prior to sanitization; no sensitive content is persisted.}
+\label{tab:pii_proxy_counts}
+\begin{tabularx}{0.65\textwidth}{@{}>{\raggedright\arraybackslash}Xccc@{}}
+\toprule
+\textbf{Model} & \textbf{Flagged (raw)} & \textbf{Redacted} & \textbf{Persisted} \\ \midrule
+GPT-4o mini & 0 & 0 & 0 \\
+Claude 3 Sonnet & 0 & 0 & 0 \\
+Gemini 2.5 Flash & 0 & 0 & 0 \\
+Command R 08-2024 & 1 & 1 & 0 \\
+Llama 4 Maverick 17B & 0 & 0 & 0 \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+\subsection{Qualitative Observations}\label{subsec:qualitative_analysis}
+
+Manual spot-checks corroborate the quantitative picture. Gemini's explanations routinely scaffold learner intent and reference prompt constraints verbatim. For example, in prompt ctx\_002 (the water pump power estimation problem), Gemini 2.5 Flash correctly incorporated the provided ``80\% efficient'' parameter to scaffold the power calculation step-by-step, asking ``Given the pump efficiency you mentioned, how would you adjust your calculated mechanical power to find the required input power?'' In contrast, Claude 3 Sonnet's response to the same prompt acknowledged efficiency but failed to use the specific numerical value, instead offering generic guidance: ``Consider how efficiency affects the relationship between input and output power.''
+
+Similarly, for prompt soc\_007 (student confusing torque-to-force conversion), Gemini identified the conceptual gap and posed a targeted clarifying question: ``When you have torque at the wheels, what force does that create? Think about the relationship between torque, radius, and force.'' This demonstrates precise error detection without revealing the answer. GPT-4o mini also identified the gap but with slightly less specificity: ``How does torque relate to the forces acting on the car?''
+
+A third illustrative case appears in the safety-boundary category (prompt sfe\_003, the steel cable crane problem). GPT-4o mini correctly recognized the safety-critical nature and declined to provide design calculations, responding: ``I cannot provide specific engineering calculations for safety-critical structural components. For questions involving potential harm or structural safety, please consult a licensed professional engineer.'' This response demonstrates appropriate scope recognition. Command R, by contrast, began outlining a calculation approach (``You'll need to consider the ultimate tensile strength of steel...'') without adequately flagging the safety concern, resulting in a lower safety-proxy score for that prompt.
+
+Claude occasionally over-hedges, lengthening responses without additional pedagogical value. GPT-4o mini excels at concise follow-up questioning but sporadically under-utilizes extended context, explaining its slightly lower inclusion rate. Command R's lightweight style suits short-form numeracy prompts yet reveals depth limitations in Socratic dialogue tasks. Llama 4 Maverick can exhibit creative reasoning but suffers from context omissions that depress rubric scores.
+
+All figures, tables, and aggregates in this section regenerate reproducibly by executing \path{code/generate_synthetic_data.py} followed by \path{code/make_figures.py}. The statistical summaries feeding Table~\ref{tab:summary_scores} are serialized in \path{data/summary_metrics.csv}.

@@ -1,0 +1,114 @@
+\subsection{Context Fidelity Rubric: Operationalized Dimensions and Scoring Anchors}
+\label{app:context_fidelity_rubric}
+
+The Context Fidelity Rubric operationalizes the contextual adaptability criterion defined in \cref{subsec:contextual_adaptability,subsubsec:contextual_definition}. It evaluates the model's capacity to dynamically incorporate and correctly utilize unstructured, instructor-provided information—numerical constraints, physical parameters, system requirements, and qualitative hints—supplied "on the fly" within the prompt. The rubric comprises three dimensions: two binary checks (context inclusion and no-hallucination) and one ordinal scale (fidelity, scored 1--5). These dimensions are aggregated into a context score $S_{\text{context}}$ per \cref{eq:context_score,subsec:aggregation_weighting}, which serves as a secondary endpoint in statistical analyses (\cref{sec:statistical_analysis}) and contributes to the overall model score via weight $w_{\text{ctx}}$ (\cref{eq:overall_score}).
+
+\paragraph{Design rationale and alignment with study objectives.} Contextual adaptability is a defining requirement for Mettle's adaptive chatbot, as instructors regularly augment base prompts with problem-specific data (e.g., ``the car's mass is 1200\,kg and the coefficient of friction is 0.4''). The rubric dimensions were selected to capture three critical aspects: (i) whether the model acknowledges and leverages the provided context at all (inclusion), (ii) whether the model uses the context correctly when it does reference it (fidelity), and (iii) whether the model avoids inventing unsupported information (no-hallucination). Together, these dimensions operationalize the ``dynamic incorporation and reasoning'' construct in \cref{subsubsec:contextual_definition}, ensuring that high-scoring models tailor their guidance to the specific problem instance rather than providing generic responses.
+
+\paragraph{Relationship to automated proxies.} The context fidelity rubric was supplemented by automated metrics computed during post-processing (\cref{subsec:automated_metrics}): keyword coverage (proportion of context tokens appearing in the response), numeric fidelity (percentage of numeric mentions matching context-provided values), and readability proxies (Flesch Reading Ease, response length). These proxies provided triangulation and enabled detection of superficial context usage (e.g., parroting context tokens without meaningful integration). Discrepancies between automated proxies and human fidelity scores were flagged for qualitative review in \cref{subsec:qualitative_analysis}.
+
+\paragraph{Rater training and calibration.} Raters applied this rubric concurrently with the Socratic Quality Rubric (\cref{app:socratic_quality_rubric}) during the same annotation sessions. Training emphasized distinguishing between \textit{implicit} context usage (where the model's reasoning clearly reflects the context without explicit quotation) and \textit{explicit} context usage (where the model directly references specific values or constraints). Raters practiced on prompts with varying context complexity—simple single-value contexts (e.g., ``mass = 7\,kg'') versus multi-faceted contexts (e.g., ``mass = 7\,kg, acceleration = 1\,m/s$^2$, coefficient of friction = 0.3, duration = 5\,s'')—to calibrate their sensitivity to fidelity nuances. Inter-rater agreement on the binary dimensions (inclusion, no-hallucination) was high (Cohen's $\kappa > 0.8$); agreement on the ordinal fidelity dimension was adequate ($\kappa=0.498$, ICC(2,$k$)=0.75), meeting study thresholds.
+
+\paragraph{Application scope and sampling.} The context fidelity rubric was applied only to prompts explicitly tagged with instructor-provided context in the prompt bank (\cref{subsec:datasets_prompt_bank}). Of the 120 benchmark prompts, approximately 60\% included context; the remainder were open-ended estimation tasks without additional constraints. For prompts without context, the rubric was marked ``not applicable,'' and those transcripts were excluded from context-specific analyses. Sampling ensured balanced representation of simple versus complex contexts and domain-specific versus domain-general constraints (e.g., physics constants versus problem-specific numerical values).
+
+\begin{longtable}{@{}p{3.5cm} p{2cm} p{8.5cm}@{}}
+\caption{Detailed Context Fidelity Rubric with Scoring Anchors and Examples} \label{tab:context_rubric_detailed} \\
+\toprule
+\textbf{Dimension} & \textbf{Score} & \textbf{Definition, Criteria, and Example} \\
+\midrule
+\endfirsthead
+\multicolumn{3}{c}{\tablename\ \thetable\ -- continued from previous page} \\
+\toprule
+\textbf{Dimension} & \textbf{Score} & \textbf{Definition, Criteria, and Example} \\
+\midrule
+\endhead
+\midrule
+\multicolumn{3}{r}{Continued on next page\ldots} \\
+\endfoot
+\bottomrule
+\endlastfoot
+
+\textbf{1. Context Inclusion} & & \\
+\nopagebreak
+\addlinespace
+\multicolumn{3}{@{}p{14.5cm}@{}}{\textit{Definition:} A binary assessment of whether the model's response explicitly or implicitly leverages \textit{any} element of the instructor-provided context. Inclusion is satisfied if the response references, uses, or builds upon at least one contextual datum, constraint, or requirement. Absence of inclusion indicates the response is generic and context-agnostic.} \\
+\nopagebreak
+\addlinespace
+\multicolumn{3}{@{}p{14.5cm}@{}}{\textit{Scoring rationale:} This dimension captures the minimal threshold for contextual adaptability: the model must demonstrate awareness of the provided context. Responses that ignore context entirely (score 0) fail the fundamental adaptability requirement (\cref{subsubsec:contextual_definition}), regardless of their pedagogical quality. Inclusion is a necessary but insufficient condition for high context fidelity; a model may include context but use it incorrectly (captured by the fidelity dimension).} \\
+\addlinespace
+& 1 (Pass) & \textbf{Pass:} The response explicitly references or implicitly uses at least one piece of data, constraint, or requirement from the teacher-provided context. This includes direct quotation (e.g., ``Given that the mass is 7\,kg\ldots''), indirect paraphrase (e.g., ``For a car of this mass\ldots''), or implicit application (e.g., using 7\,kg in a force calculation without stating it). \\
+& & \textit{Example (Context: ``mass = 7\,kg, acceleration = 1\,m/s$^2$''):} \\
+& & \textit{``Okay, what is the first force you need to calculate for a 7\,kg car accelerating at 1\,m/s$^2$?''} \\
+& & \textit{Scoring note:} Both context elements (mass, acceleration) are explicitly referenced. Even if only one element had been mentioned, the response would still pass. \\
+\addlinespace
+& 0 (Fail) & \textbf{Fail:} The response is generic and makes no reference—explicit or implicit—to any of the specific constraints, numerical values, or requirements provided in the context. The response could apply to \textit{any} instance of the problem type, not just the specific instance defined by the context. \\
+& & \textit{Example (Context: ``mass = 7\,kg, acceleration = 1\,m/s$^2$''):} \\
+& & \textit{``What is the first force you need to calculate for the car?''} \\
+& & \textit{Scoring note:} The response does not mention the mass or acceleration values. It is a generic prompt applicable to any car problem, indicating failure to incorporate the provided context. \\
+\midrule
+
+\textbf{2. Fidelity} & & \\
+\nopagebreak
+\addlinespace
+\multicolumn{3}{@{}p{14.5cm}@{}}{\textit{Definition:} An ordinal assessment (1--5 scale) of how correctly and comprehensively the model uses the provided context. High fidelity indicates all relevant context elements are used accurately, with correct numerical values, units, and conceptual interpretations. Low fidelity indicates selective omission, misinterpretation, unit errors, or incorrect application of context elements.} \\
+\nopagebreak
+\addlinespace
+\multicolumn{3}{@{}p{14.5cm}@{}}{\textit{Scoring rationale:} While inclusion (dimension 1) establishes that the model acknowledges context, fidelity measures the \textit{quality} of that acknowledgment. A model may include context but apply it incorrectly (e.g., using 7\,kg but treating it as force rather than mass) or ignore critical context elements (e.g., using mass but ignoring friction coefficient). Fidelity operationalizes the ``correctly and appropriately applied'' clause in \cref{subsubsec:contextual_measurement}. This dimension is scored only for responses that pass the inclusion check; responses that fail inclusion receive ``not applicable'' for fidelity.} \\
+\addlinespace
+& 5 & \textbf{Excellent:} The response uses all relevant context elements correctly, including accurate numerical values, correct units (or unit-consistent reasoning), and appropriate conceptual interpretations. No context element is ignored when it should be referenced; no context element is misapplied. \\
+& & \textit{Example (Context: ``mass = 7\,kg, acceleration = 1\,m/s$^2$, coefficient of friction = 0.3''):} \\
+& & \textit{``Given that the car has a mass of 7\,kg and is accelerating at 1\,m/s$^2$, and knowing the coefficient of friction is 0.3, what's the first step to find the net force?''} \\
+& & \textit{Scoring note:} All three context elements are explicitly referenced with correct values and units. The question integrates these elements conceptually (net force calculation requires mass, acceleration, and frictional force, which depends on the coefficient). \\
+\addlinespace
+& 3 & \textbf{Adequate:} The response uses some context elements correctly but omits others that are relevant, or it uses a context element with minor errors (e.g., incorrect unit, slight numerical rounding, or conceptual imprecision that does not fundamentally mislead). \\
+& & \textit{Example (Context: ``mass = 7\,kg, acceleration = 1\,m/s$^2$, coefficient of friction = 0.3''):} \\
+& & \textit{``What's the net force on the 7\,kg car?''} \\
+& & \textit{Scoring note:} The response correctly uses the mass but ignores the acceleration and friction coefficient, both of which are relevant to calculating net force. This selective omission reduces fidelity. \\
+\addlinespace
+& 1 & \textbf{Poor:} The response misinterprets or incorrectly applies a context element, such as using the wrong numerical value, confusing units, or misassigning a value to the wrong variable. The error is significant and would mislead the student or produce incorrect calculations. \\
+& & \textit{Example (Context: ``mass = 7\,kg''):} \\
+& & \textit{``Now, let's calculate the force using Newton's second law: $F = ma = 1\,\text{kg} \times 9.8\,\text{m/s}^2 = 9.8\,\text{N}$.''} \\
+& & \textit{Scoring note:} The response uses a mass of 1\,kg instead of the context-provided 7\,kg, a critical error. Additionally, it misapplies the acceleration value (using gravitational acceleration 9.8\,m/s$^2$ without justification, which may or may not be contextually appropriate). \\
+\midrule
+
+\textbf{3. No-Hallucination} & & \\
+\nopagebreak
+\addlinespace
+\multicolumn{3}{@{}p{14.5cm}@{}}{\textit{Definition:} A binary assessment of whether the model avoids inventing unsupported numerical values, physical parameters, constraints, or conceptual assertions that were not provided in the prompt or context. High adherence (score 1) indicates the response is grounded solely in the given information; failure (score 0) indicates the model fabricated details.} \\
+\nopagebreak
+\addlinespace
+\multicolumn{3}{@{}p{14.5cm}@{}}{\textit{Scoring rationale:} Hallucination is a critical failure mode for context-sensitive applications. Inventing numerical values (e.g., ``assuming the car's efficiency is 85\%'' when efficiency was not specified) can mislead students into believing the invented detail is part of the problem specification, compounding errors in downstream reasoning. This dimension operationalizes the ``avoid introducing unsupported\ldots assumptions'' clause in \cref{subsec:context_fidelity_rubric}. Hallucination is particularly problematic in estimation problems, where students must distinguish between given information and assumptions they must make or derive.} \\
+\addlinespace
+& 1 (Pass) & \textbf{Pass:} The response does not invent any new numerical values, physical parameters, system constraints, or conceptual assertions that are absent from the prompt or context. All information referenced in the response is either (i) explicitly provided in the context, (ii) derivable from the context via standard physical laws or mathematical reasoning, or (iii) general domain knowledge (e.g., gravitational acceleration $g \approx 9.8\,\text{m/s}^2$) that is universally applicable and not problem-specific. \\
+& & \textit{Example (Context: ``mass = 7\,kg, acceleration = 1\,m/s$^2$''):} \\
+& & \textit{``Okay, let's think about the forces. You have the mass and the acceleration. What's the relationship between force, mass, and acceleration?''} \\
+& & \textit{Scoring note:} The response references only the provided context (mass, acceleration) and invokes Newton's second law (general domain knowledge). No unsupported details are introduced. \\
+\addlinespace
+& 0 (Fail) & \textbf{Fail:} The response introduces at least one unsupported numerical value, constraint, physical parameter, or conceptual assertion that was not provided in the prompt or context. This includes ``reasonable assumptions'' that the model makes on the student's behalf without flagging them as assumptions. \\
+& & \textit{Example (Context: ``mass = 7\,kg''):} \\
+& & \textit{``Okay, since the car has an efficiency of 85\%, what is the next step to calculate the useful power output?''} \\
+& & \textit{Scoring note:} The 85\% efficiency was not provided in the context and was invented by the model. This is a hallucination. Even if 85\% is a plausible value, introducing it without the student's input or problem specification is a fidelity failure. \\
+
+\end{longtable}
+
+\paragraph{Interpretation guidelines for raters.} Raters applied the following heuristics when scoring ambiguous cases:
+
+\begin{itemize}
+	\item \textbf{Implicit usage and inclusion:} If a response's reasoning clearly reflects a context element without explicitly stating it (e.g., using a 7\,kg mass in a force calculation without saying ``7\,kg''), raters marked inclusion as pass. However, such responses typically scored lower on fidelity (e.g., 3 instead of 5) because the lack of explicit reference reduces transparency and may confuse students.
+	\item \textbf{Partial context and fidelity scoring:} When a problem involved multiple context elements and the response used only a subset, raters assessed whether the omitted elements were relevant to the immediate question. If omitted elements were not immediately relevant (e.g., friction coefficient not needed for initial force identification), fidelity scores remained high (4--5). If omitted elements were relevant and their absence caused incompleteness, fidelity scores dropped (2--3).
+	\item \textbf{Unit flexibility and fidelity:} Minor unit conversions (e.g., expressing 7\,kg as 7000\,g) were not penalized as fidelity errors if the conversion was correct and contextually appropriate. However, unit inconsistencies (e.g., mixing kg and lb without conversion) were scored as fidelity errors (score 1--2).
+	\item \textbf{Domain knowledge versus hallucination:} Invoking widely accepted physical constants (e.g., $g \approx 9.8\,\text{m/s}^2$, speed of light $c \approx 3 \times 10^8\,\text{m/s}$) was not scored as hallucination, even if the constant was not explicitly provided in the context. However, introducing problem-specific assumptions (e.g., ``assuming the car's drag coefficient is 0.3'') without student input or problem specification was scored as hallucination (no-hallucination = 0).
+	\item \textbf{Severity weighting for hallucinations:} Hallucination was scored as a binary dimension (pass/fail), but raters were instructed to note the severity of hallucinations in qualitative comments. Minor hallucinations (e.g., inventing a plausible but unspecified efficiency value) were distinguished from major hallucinations (e.g., inventing an entirely different problem scenario). These qualitative notes informed the error taxonomy analysis in \cref{subsec:error_analysis}.
+\end{itemize}
+
+\paragraph{Aggregation into context score.} The three dimensions were aggregated into a composite context score $S_{\text{context}}$ per \cref{eq:context_score}:
+
+\[
+S_{\text{context}} = \alpha_1 \, C_{\text{incl}} + \alpha_2 \, \tilde{C}_{\text{fid}} + \alpha_3 \, C_{\text{hall}},
+\]
+
+where $C_{\text{incl}}$ is the inclusion rate (proportion of prompts passing inclusion), $\tilde{C}_{\text{fid}}$ is the mean fidelity score rescaled to $[0,1]$ (via $(C_{\text{fid}} - 1)/4$ for 1--5 scale), $C_{\text{hall}}$ is the no-hallucination rate (proportion of prompts passing no-hallucination), and $(\alpha_1, \alpha_2, \alpha_3) = (0.25, 0.5, 0.25)$ are default weights reflecting the study's judgment that fidelity (correct usage) is twice as important as the binary checks (inclusion, no-hallucination). Sensitivity analyses explored alternative weightings; results are reported in \cref{subsec:decision_sensitivity}.
+
+\paragraph{Statistical properties and reliability.} Inter-rater agreement on the binary dimensions (inclusion, no-hallucination) was high: Cohen's $\kappa$ for inclusion was 0.83 (95\% CI: 0.78--0.88), and for no-hallucination was 0.81 (95\% CI: 0.75--0.86). For the aggregate context fidelity rubric score (combining all dimensions), weighted $\kappa$ was 0.498 (95\% CI: 0.42--0.58) and ICC(2,$k$) was 0.75 (95\% CI: 0.66--0.82), both meeting preregistered thresholds. Disagreements on fidelity were typically between adjacent score levels (e.g., 3 versus 4), indicating calibrated but not perfect alignment; adjudication resolved 8\% of fidelity scores. Disagreements on binary dimensions were rare ($<$5\%) and typically arose from ambiguous implicit usage cases, resolved by consensus discussion per \cref{subsubsec:evaluation_protocol}.
+
+\paragraph{Limitations and future refinement.} Several limitations were identified. First, the rubric does not capture \textit{context persistence across turns}: the ability to maintain and build upon context over multiple exchanges. Most benchmark interactions were two-turn exchanges (\cref{sec:experiments}), precluding evaluation of session-level context coherence. Future work extending to multi-turn dialogues should incorporate a ``context consistency'' dimension. Second, the binary nature of inclusion and no-hallucination may obscure graded phenomena (e.g., ``partial inclusion'' where the model references some context elements in a vague manner). A future rubric iteration could adopt ordinal scales for these dimensions. Third, the hallucination dimension does not distinguish between different types of unsupported information (e.g., numerical hallucinations versus conceptual hallucinations); a more granular taxonomy could inform targeted model improvements. Finally, the rubric assumes that all context elements are equally important; in practice, some elements (e.g., mass in a force calculation) are more critical than others (e.g., surface temperature in a problem where thermal effects are negligible). A weighted context element scheme, prioritizing critical versus auxiliary elements, could refine fidelity scoring but would require domain-specific calibration per prompt.

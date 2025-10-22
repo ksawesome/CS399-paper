@@ -1,0 +1,13 @@
+category,anthropic-claude-3-sonnet-20240229,cohere-command-r-08-2024,google-gemini-2.5-flash,meta-llama-Llama-4-Maverick-17B-128E-Instruct,openai-gpt-4o-mini
+applied_math,2.0,0.0,2.0,1.0,5.0
+cs_algorithms,4.0,1.0,4.0,0.0,1.0
+cs_systems,0.0,1.0,7.0,0.0,2.0
+history_civics,1.0,0.0,5.0,1.0,3.0
+instructional_design,5.0,0.0,3.0,1.0,1.0
+language_learning,3.0,2.0,4.0,0.0,1.0
+literature_analysis,4.0,1.0,2.0,3.0,0.0
+numeracy_basics,1.0,4.0,3.0,0.0,2.0
+productivity_ops,2.0,1.0,4.0,1.0,2.0
+safety_alignment,3.0,1.0,2.0,0.0,4.0
+socratic_dialogue,1.0,2.0,5.0,0.0,2.0
+stem_physics,2.0,4.0,2.0,0.0,2.0

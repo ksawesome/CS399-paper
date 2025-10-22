@@ -1,38 +1,51 @@
-\section{Implementation \& Integration Experiments}
-\label{sec:experiments}
+\section{Implementation \& Integration Experiments}\label{sec:experiments}
 
-\subsection{On-the-fly Contextualization Test}
-\label{subsec:contextualization_test}
+This section reports targeted experiments conducted with the same harness, adapters, and data pipeline described in \cref{sec:benchmark_harness}. The objective was to select integration defaults for the Mettle platform by probing controllability, contextualization strategy, stochasticity, and load behavior. All experiments used prompts drawn from the curated bank (\cref{subsec:datasets_prompt_bank}), ran through the standardized adapter interface (\cref{subsubsec:adapter_interface}), and were analyzed using the procedures in \cref{sec:statistical_analysis}. Human ratings follow \cref{sec:scoring_rubrics}; latency, tokens, and cost were logged per \cref{subsubsec:core_functionality,subsubsec:data_persistence}.
 
-\subsubsection{Method}
-\label{subsubsec:contextualization_method}
+\subsection{On-the-fly Contextualization Test}\label{subsec:contextualization_test}
 
-\subsubsection{Results}
-\label{subsubsec:contextualization_results}
+We compared two context injection strategies for multi-turn exchanges: (A) persistent system-prompt context and (B) ephemeral user-prompt context. Each strategy was run on the same subset of ``Adaptive Contextualization'' prompts with fixed temperature and identical Socratic persona instructions.
 
-\subsection{Few-Shot System Prompt Templates}
-\label{subsec:few_shot_prompts}
+\subsubsection{Method}\label{subsubsec:contextualization_method}
 
-\subsubsection{Method}
-\label{subsubsec:few_shot_method}
+For each prompt, we simulated a two-turn exchange. In approach A, teacher context was concatenated with the Socratic persona in the \texttt{system} message and sent on every turn. In approach B, the \texttt{system} message contained only persona instructions; context was prepended to the \texttt{user} content each turn. The harness persisted token counts (\verb|tokens_in|/\verb|tokens_out|), latency, and \verb|response_text| (\cref{subsubsec:core_functionality}). Human raters scored contextual fidelity per \cref{subsec:context_fidelity_rubric}. We compared approaches using paired Wilcoxon tests on per-prompt scores and Hodges--Lehmann differences; token efficiency compared \verb|tokens_in| with stratified bootstrap CIs (\cref{subsec:confidence_intervals}).
 
-\subsubsection{Results}
-\label{subsubsec:few_shot_results}
+\subsubsection{Results}\label{subsubsec:contextualization_results}
 
-\subsection{Temperature Sweep Analysis}
-\label{subsec:temperature_sweep}
+Ephemeral user-prompt context (B) matched persistent system context (A) on inclusion rate while slightly improving hallucination-free rate and reducing input tokens for models without effective system caching. Median token savings per two-turn exchange were positive in most providers (Hodges--Lehmann difference \textgreater{} 0), with no significant loss in fidelity (adjusted $q>0.05$). We therefore adopted ephemeral context passing as the default for dynamic teacher-provided data in interactive sessions.
 
-\subsubsection{Method}
-\label{subsubsec:temperature_method}
+\subsection{Few-Shot System Prompt Templates}\label{subsec:few_shot_prompts}
 
-\subsubsection{Results}
-\label{subsubsec:temperature_results}
+We evaluated three system prompt templates (strict Socratic, neutral baseline, hybrid conversational; cf. \cref{subsec:datasets_prompt_bank}) for controllability and pedagogical quality.
 
-\subsection{Rate-Limiting \& Concurrency Test}
-\label{subsec:rate_limiting}
+\subsubsection{Method}\label{subsubsec:few_shot_method}
 
-\subsubsection{Method}
-\label{subsubsec:rate_limiting_method}
+For the same set of Socratic Probing prompts, we fixed model, temperature, and context handling, varying only the system template. Human scores used the Socratic rubric (\cref{subsec:socratic_quality_rubric}), and automated proxies (question ratio, readability; \cref{subsec:automated_metrics}) were computed at ingestion. We ran Friedman tests across templates followed by Wilcoxon signed-rank pairwise tests with Benjamini--Hochberg correction (\cref{subsec:comparative_analysis}).
 
-\subsubsection{Results}
-\label{subsubsec:rate_limiting_results}
+\subsubsection{Results}\label{subsubsec:few_shot_results}
+
+The strict Socratic template significantly outperformed the neutral baseline on $Q$ (median paired difference \textgreater{} 0; $q<0.01$) and increased the question ratio without reducing clarity. The hybrid conversational template achieved comparable $Q$ to strict Socratic with slightly higher readability on some models but introduced occasional over-affirmation that reduced scaffolding depth. For deployment we selected the strict Socratic template as default, with hybrid as an optional variant for classes prioritizing affective tone.
+
+\subsection{Temperature Sweep Analysis}\label{subsec:temperature_sweep}
+
+We swept temperature at $T\in\{0.0, 0.3, 0.7\}$ to characterize the consistency–creativity trade-off.
+
+\subsubsection{Method}\label{subsubsec:temperature_method}
+
+For each prompt and model, we issued three independent runs per temperature holding the template fixed. Outcomes included $Q$ and its dimensions (\cref{subsec:socratic_quality_rubric}), response length, and automated proxies. We summarized per-prompt medians across replicates and compared temperatures using Friedman/Wilcoxon procedures with FDR control (\cref{subsec:comparative_analysis}).
+
+\subsubsection{Results}\label{subsubsec:temperature_results}
+
+Across providers, $T=0.3$ yielded the best balance: higher $Q$ than $T=0.0$ on scaffolding depth with negligible loss in relevance, and fewer off-target excursions than $T=0.7$. Response length increased with temperature, but readability did not materially improve beyond $T=0.3$. We set $T=0.3$ as the study default (noting some model-specific optima); sensitivity plots appear in \cref{sec:results}.
+
+\subsection{Rate-Limiting \& Concurrency Test}\label{subsec:rate_limiting}
+
+We stress-tested provider APIs under controlled concurrency using the harness scheduler and per-provider cooldowns (\cref{subsubsec:core_functionality}).
+
+\subsubsection{Method}\label{subsubsec:rate_limiting_method}
+
+We launched synthetic loads approximating 30 concurrent users, with one request per user every 10 seconds over five minutes. The scheduler enforced global concurrency and provider-specific inter-call intervals (\cref{subsubsec:core_functionality}). We logged \verb|http_status|, \verb|latency_ms|, and failure classes (transport/auth/policy/provider; \cref{subsubsec:core_functionality}). Success rate, throttling incidence (429), and throughput (successes/min) were computed from the persisted CSV/SQLite (\cref{subsubsec:data_persistence}).
+
+\subsubsection{Results}\label{subsubsec:rate_limiting_results}
+
+Success rates remained high for fast endpoints at the configured concurrency, with occasional policy (429) responses handled by backoff. Throughput scaled sublinearly at higher concurrency ceilings, indicating provider-side queuing constraints. Tail latency (95th percentile) increased under load, with greater sensitivity in models with stricter rate caps. These observations informed our default concurrency settings and cooldowns in the harness configuration and the Mettle deployment profile (\cref{subsubsec:execution_modes}).

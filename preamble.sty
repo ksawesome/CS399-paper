@@ -30,23 +30,21 @@
 \usepackage{import}            % For relative imports
 \usepackage{siunitx}            % For number alignment in tables
 \usepackage{subcaption}        % For subfigures/subtables
-% Minted for advanced code listings (requires -shell-escape and pygmentize)
-\usepackage{minted}
 \usepackage{placeins}
-
-% Minted defaults: tweak as needed
-\setminted{
-    fontsize=\footnotesize,
-    breaklines=true,
-    frame=single,
-    framesep=2mm,
-    baselinestretch=1,
-    tabsize=2
-}
 \usepackage[acronym]{glossaries} % For glossary and acronym support
 \usepackage{imakeidx}          % For subject index
 \usepackage{fancyhdr}
 \usepackage{lastpage}
+\usepackage{tocloft}           % For better TOC formatting
+
+% ======================================================================
+% Table of Contents Formatting
+% ======================================================================
+% Add dots for sections in TOC
+\renewcommand{\cftsecleader}{\cftdotfill{\cftdotsep}}
+% Adjust spacing
+\setlength{\cftbeforesecskip}{0.3em}
+\setlength{\cftbeforesubsecskip}{0.2em}
 
 % ======================================================================
 % Header/Footer Setup
@@ -202,6 +200,10 @@
 
 % Set graphics path for figures
 \graphicspath{{figures/}}
+
+% Configure cleveref names for listings
+\crefname{lstlisting}{listing}{listings}
+\Crefname{lstlisting}{Listing}{Listings}
 
 % ======================================================================
 % End of Preamble

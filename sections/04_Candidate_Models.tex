@@ -6,20 +6,37 @@ This section presents the Large Language Models (LLMs) evaluated in the Mettle b
 The final set of models evaluated is as follows:
 
 \begin{itemize}
-    \item \textbf{OpenAI GPT-4o Mini} (\texttt{gpt-4o-mini}) — A high-performing variant of the GPT-4 architecture optimized for low-latency applications. Selected for its strong contextual understanding and proven capability in generating Socratic-style reasoning.
+    \item \textbf{OpenAI GPT-4o mini} (\texttt{gpt-4o-mini}) — A high-performing variant of the GPT-4 architecture optimized for low-latency applications. Selected for its strong contextual understanding and proven capability in generating Socratic-style reasoning.
     
-    \item \textbf{Anthropic Claude 3 Sonnet 20240229} (\texttt{claude-3-sonnet-20240229}) — Known for its safety-oriented architecture and alignment with human instruction. Chosen for its balance between conversational depth, controllability, and accurate context use.
+    \item \textbf{Anthropic Claude 3 Sonnet} (\texttt{claude-3-sonnet-20240229}) — Known for its safety-oriented architecture and alignment with human instruction. Chosen for its balance between conversational depth, controllability, and accurate context use.
     
     \item \textbf{Google Gemini 2.5 Flash} (\texttt{gemini-2.5-flash}) — Offers advanced reasoning capabilities with low-latency responses. Selected for its adaptability and potential for seamless integration with cloud APIs.
     
     \item \textbf{Cohere Command R 08-2024} (\texttt{command-r-08-2024}) — Provides strong instruction-following and embedding capabilities. Included to assess performance and cost relative to other proprietary models.
     
-    \item \textbf{Meta LLaMA 4 Maverick 17B 128E Instruct} (\texttt{meta-llama/Llama-4-Maverick-17B-128E-Instruct}) — An open-source model offering transparency and local deployment options, serving as a baseline to evaluate trade-offs in cost, reliability, and pedagogical fidelity.
+    \item \textbf{Meta Llama 4 Maverick (17B)} (\texttt{meta-llama/Llama-4-Maverick-17B-128E-Instruct}) — An open-source model offering transparency and local deployment options, serving as a baseline to evaluate trade-offs in cost, reliability, and pedagogical fidelity.
 \end{itemize}
 
-All experiments were conducted using the latest model versions available as of Q4 2025. API access utilized institutional free credits and the GitHub Student Developer Pack where applicable, with any additional usage charged at the standard commercial rate. These models were selected to represent a balance of cutting-edge performance, safety, cost-awareness, and integration feasibility, ensuring a thorough comparison aligned with the project’s pedagogical and operational objectives.
+All experiments were conducted using the latest model versions available as of Q4 2025. API access utilized institutional free credits and the GitHub Student Developer Pack where applicable, with any additional usage charged at the standard commercial rate. These models were selected to represent a balance of cutting-edge performance, safety, cost-awareness, and integration feasibility, ensuring a thorough comparison aligned with the project's pedagogical and operational objectives.
 
-\subsection{OpenAI - GPT-4o Mini}
+\begin{table}[t]
+\centering
+\caption{Candidate model specifications and key characteristics.}
+\label{tab:candidate_models}
+\begin{tabularx}{\textwidth}{@{}l l c c X@{}}
+\toprule
+\textbf{Model} & \textbf{Provider} & \textbf{Context} & \textbf{Temp.} & \textbf{Primary Strengths} \\ \midrule
+GPT-4o mini & OpenAI & 128k & 0.3 & Balanced reasoning, strong instruction-following, cost-efficient \\
+Claude 3 Sonnet & Anthropic & 200k & 0.3 & Safety-oriented, nuanced conversation, ethical alignment \\
+Gemini 2.5 Flash & Google & 128k & 0.3 & Low latency, fast throughput, strong context retention \\
+Command R 08-2024 & Cohere & 128k & 0.3 & RAG-optimized, context fidelity, reduced hallucination \\
+Llama 4 Maverick (17B) & Meta & 128k & 0.3 & Open-source baseline, transparency, local deployment \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier
+
+\subsection{OpenAI GPT-4o mini}
 \label{sec:model_gpt4o_mini}
 
 \begin{itemize}
@@ -29,17 +46,16 @@ All experiments were conducted using the latest model versions available as of Q
             \item Model Version: \verb|gpt-4o-mini| (latest version as of Q4 2025)
         \end{itemize}
     \item \textbf{Rationale for Candidacy:} 
-        GPT-4o Mini is a highly efficient variant of the GPT-4 architecture, offering an optimal balance of advanced reasoning capabilities and reduced operational cost. Its instruction-following abilities are particularly suited for enforcing the Socratic tutoring paradigm, generating questions that guide students' reasoning without revealing direct answers. The model’s robust performance in context retention and adaptability makes it a strong candidate for pedagogical evaluation. Additionally, OpenAI’s well-documented API ensures straightforward integration and reliable developer tooling, fulfilling the project’s technical requirements.
+        GPT-4o mini is a highly efficient variant of the GPT-4 architecture, offering an optimal balance of advanced reasoning capabilities and reduced operational cost. Its instruction-following abilities are particularly suited for enforcing the Socratic tutoring paradigm, generating questions that guide students' reasoning without revealing direct answers. The model's robust performance in context retention and adaptability makes it a strong candidate for pedagogical evaluation. Additionally, OpenAI's well-documented API ensures straightforward integration and reliable developer tooling, fulfilling the project's technical requirements.
     \item \textbf{Key Constraints:}
         \begin{itemize}
             \item Maximum Context Length: 128,000 tokens
-            \item Rate Limit: 10 seconds per request
             \item Timeout: 30 seconds
-            \item Temperature Setting Used: 0.3
+            \item Temperature Setting Used: 0.3 (standardized across all models; value determined to provide the best balance of consistency and quality in a preliminary sweep; see \cref{subsec:temperature_sweep})
         \end{itemize}
 \end{itemize}
 
-\subsection{Anthropic - Claude 3 Sonnet}
+\subsection{Anthropic Claude 3 Sonnet}
 \label{sec:model_claude3_sonnet}
 
 \begin{itemize}
@@ -49,17 +65,16 @@ All experiments were conducted using the latest model versions available as of Q
             \item Model Version: \verb|claude-3-sonnet-20240229| (latest version as of Q4 2025)
         \end{itemize}
     \item \textbf{Rationale for Candidacy:} 
-        Claude 3 Sonnet excels in tasks that demand reliability and nuanced instruction-following over extended conversations, making it particularly well-suited for maintaining a consistent, supportive Socratic tutoring tone. Its design prioritizes safety and helpfulness, aligning with the ethical and data privacy requirements of an educational deployment. The model’s strong contextual reasoning and pedagogical fidelity make it a high-performing candidate, balancing cost-effectiveness with robust educational capabilities.
+        Claude 3 Sonnet excels in tasks that demand reliability and nuanced instruction-following over extended conversations, making it particularly well-suited for maintaining a consistent, supportive Socratic tutoring tone. Its design prioritizes safety and helpfulness, aligning with the ethical and data privacy requirements of an educational deployment. The model's strong contextual reasoning and pedagogical fidelity make it a high-performing candidate, balancing cost-effectiveness with robust educational capabilities.
     \item \textbf{Key Constraints:}
         \begin{itemize}
             \item Maximum Context Length: 200,000 tokens
-            \item Rate Limit: 10 seconds per request
             \item Timeout: 30 seconds
-            \item Temperature Setting Used: 0.3
+            \item Temperature Setting Used: 0.3 (standardized across all models; value determined to provide the best balance of consistency and quality in a preliminary sweep; see \cref{subsec:temperature_sweep})
         \end{itemize}
 \end{itemize}
 
-\subsection{Google - Gemini 2.5 Flash}
+\subsection{Google Gemini 2.5 Flash}
 \label{sec:model_gemini2_5_flash}
 
 \begin{itemize}
@@ -73,13 +88,12 @@ All experiments were conducted using the latest model versions available as of Q
     \item \textbf{Key Constraints:}
         \begin{itemize}
             \item Maximum Context Length: 128,000 tokens
-            \item Rate Limit: 10 seconds per request
             \item Timeout: 30 seconds
-            \item Temperature Setting Used: 0.3
+            \item Temperature Setting Used: 0.3 (standardized across all models; value determined to provide the best balance of consistency and quality in a preliminary sweep; see \cref{subsec:temperature_sweep})
         \end{itemize}
 \end{itemize}
 
-\subsection{Cohere - Command R 08-2024}
+\subsection{Cohere Command R 08-2024}
 \label{sec:model_command_r}
 
 \begin{itemize}
@@ -93,14 +107,13 @@ All experiments were conducted using the latest model versions available as of Q
     \item \textbf{Key Constraints:}
         \begin{itemize}
             \item Maximum Context Length: 128,000 tokens
-            \item Rate Limit: 10 seconds per request
             \item Timeout: 30 seconds
-            \item Temperature Setting Used: 0.3
+            \item Temperature Setting Used: 0.3 (standardized across all models; value determined to provide the best balance of consistency and quality in a preliminary sweep; see \cref{subsec:temperature_sweep})
         \end{itemize}
 \end{itemize}
 
 
-\subsection{Meta - Llama 4 Maverick 17B Instruct (Hosted API)}
+\subsection{Meta Llama 4 Maverick (17B)}
 \label{sec:model_llama_4}
 
 \begin{itemize}
@@ -110,12 +123,11 @@ All experiments were conducted using the latest model versions available as of Q
             \item Model Version: \verb|meta-llama/Llama-4-Maverick-17B-128E-Instruct| (latest version as of Q4 2025)
         \end{itemize}
     \item \textbf{Rationale for Candidacy:} 
-        Llama 4 Maverick 17B Instruct is selected as a state-of-the-art open-source model, serving as a critical baseline for comparison against proprietary models. Its inclusion enables evaluation of cost-efficiency and performance trade-offs in a fully open-source context. Access via the Hugging Face hosted API ensures seamless integration into the Mettle backend without requiring local deployment, letting the study focus on the model's pedagogical and contextual performance. Its large parameter count and instruction-tuned architecture are expected to yield high-quality Socratic guidance while maintaining adaptability to complex problem contexts.
+        Llama 4 Maverick (17B) is selected as a state-of-the-art open-source model, serving as a critical baseline for comparison against proprietary models. Its inclusion enables evaluation of cost-efficiency and performance trade-offs in a fully open-source context. Access via the Hugging Face hosted API ensures seamless integration into the Mettle backend without requiring local deployment, letting the study focus on the model's pedagogical and contextual performance. Its large parameter count and instruction-tuned architecture are expected to yield high-quality Socratic guidance while maintaining adaptability to complex problem contexts.
     \item \textbf{Key Constraints:}
         \begin{itemize}
             \item Maximum Context Length: 128,000 tokens
-            \item Rate Limit: 10 seconds per request
             \item Timeout: 30 seconds
-            \item Temperature Setting Used: 0.3
+            \item Temperature Setting Used: 0.3 (standardized across all models; value determined to provide the best balance of consistency and quality in a preliminary sweep; see \cref{subsec:temperature_sweep})
         \end{itemize}
 \end{itemize}

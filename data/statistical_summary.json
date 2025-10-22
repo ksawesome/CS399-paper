@@ -1,0 +1,159 @@
+{
+  "pedagogical_friedman": {
+    "chi_sq": 120.07333333333327,
+    "p_value": 0.0003332222592469177,
+    "kendall_w": 0.2501527777777776
+  },
+  "pedagogical_pairwise": {
+    "openai-gpt-4o-mini__anthropic-claude-3-sonnet-20240229": {
+      "p_value": 0.03389791247064146,
+      "q_value": 0.03766434718960162,
+      "effect_size": -0.2231404958677686,
+      "hl_estimate": -0.07725308992324553
+    },
+    "openai-gpt-4o-mini__google-gemini-2.5-flash": {
+      "p_value": 0.011933173967080966,
+      "q_value": 0.014916467458851206,
+      "effect_size": -0.2644628099173554,
+      "hl_estimate": -0.044690044354763536
+    },
+    "openai-gpt-4o-mini__cohere-command-r-08-2024": {
+      "p_value": 0.009523121965228514,
+      "q_value": 0.01360445995032645,
+      "effect_size": 0.2727272727272727,
+      "hl_estimate": 0.08099600054459932
+    },
+    "openai-gpt-4o-mini__meta-llama-Llama-4-Maverick-17B-128E-Instruct": {
+      "p_value": 1.6467179417196475e-13,
+      "q_value": 5.489059805732158e-13,
+      "effect_size": 0.7757575757575758,
+      "hl_estimate": 0.16714806657912562
+    },
+    "anthropic-claude-3-sonnet-20240229__google-gemini-2.5-flash": {
+      "p_value": 0.31584789926589024,
+      "q_value": 0.31584789926589024,
+      "effect_size": -0.10550964187327824,
+      "hl_estimate": -0.0332439726390088
+    },
+    "anthropic-claude-3-sonnet-20240229__cohere-command-r-08-2024": {
+      "p_value": 2.248766667701222e-06,
+      "q_value": 3.7479444461687034e-06,
+      "effect_size": 0.4975206611570248,
+      "hl_estimate": 0.08424797951220753
+    },
+    "anthropic-claude-3-sonnet-20240229__meta-llama-Llama-4-Maverick-17B-128E-Instruct": {
+      "p_value": 9.321004686777772e-18,
+      "q_value": 9.321004686777773e-17,
+      "effect_size": 0.9027548209366392,
+      "hl_estimate": 0.20843184332194808
+    },
+    "google-gemini-2.5-flash__cohere-command-r-08-2024": {
+      "p_value": 5.299642742847298e-07,
+      "q_value": 1.0599285485694596e-06,
+      "effect_size": 0.5275482093663911,
+      "hl_estimate": 0.09967041680116151
+    },
+    "google-gemini-2.5-flash__meta-llama-Llama-4-Maverick-17B-128E-Instruct": {
+      "p_value": 1.5231563370883825e-16,
+      "q_value": 7.615781685441913e-16,
+      "effect_size": 0.8683195592286501,
+      "hl_estimate": 0.2555482697705247
+    },
+    "cohere-command-r-08-2024__meta-llama-Llama-4-Maverick-17B-128E-Instruct": {
+      "p_value": 2.5045651947065622e-08,
+      "q_value": 6.261412986766405e-08,
+      "effect_size": 0.5862258953168044,
+      "hl_estimate": 0.1280904195806667
+    }
+  },
+  "inclusion_cochran_q": {
+    "q_stat": 14.981132075471699,
+    "p_value": 0.007996801279488205
+  },
+  "inclusion_pairwise": {
+    "openai-gpt-4o-mini__anthropic-claude-3-sonnet-20240229": {
+      "p_value": 0.30745625495910645,
+      "risk_diff": 0.05,
+      "odds_ratio": 1.5666341463414635
+    },
+    "openai-gpt-4o-mini__google-gemini-2.5-flash": {
+      "p_value": 0.3017578125,
+      "risk_diff": -0.041666666666666664,
+      "odds_ratio": 0.573568281938326
+    },
+    "openai-gpt-4o-mini__cohere-command-r-08-2024": {
+      "p_value": 0.11846923828125,
+      "risk_diff": -0.058333333333333334,
+      "odds_ratio": 0.41333333333333333
+    },
+    "openai-gpt-4o-mini__meta-llama-Llama-4-Maverick-17B-128E-Instruct": {
+      "p_value": 0.21003961563110352,
+      "risk_diff": 0.058333333333333334,
+      "odds_ratio": 1.6675862068965517
+    },
+    "anthropic-claude-3-sonnet-20240229__google-gemini-2.5-flash": {
+      "p_value": 0.03468966484069824,
+      "risk_diff": -0.09166666666666666,
+      "odds_ratio": 0.3661150136921062
+    },
+    "anthropic-claude-3-sonnet-20240229__cohere-command-r-08-2024": {
+      "p_value": 0.007197380065917969,
+      "risk_diff": -0.10833333333333334,
+      "odds_ratio": 0.26383526383526384
+    },
+    "anthropic-claude-3-sonnet-20240229__meta-llama-Llama-4-Maverick-17B-128E-Instruct": {
+      "p_value": 1.0,
+      "risk_diff": 0.008333333333333333,
+      "odds_ratio": 1.0644388230595128
+    },
+    "google-gemini-2.5-flash__cohere-command-r-08-2024": {
+      "p_value": 0.7744140625,
+      "risk_diff": -0.016666666666666666,
+      "odds_ratio": 0.7206349206349206
+    },
+    "google-gemini-2.5-flash__meta-llama-Llama-4-Maverick-17B-128E-Instruct": {
+      "p_value": 0.01690053939819336,
+      "risk_diff": 0.1,
+      "odds_ratio": 2.9073891625615764
+    },
+    "cohere-command-r-08-2024__meta-llama-Llama-4-Maverick-17B-128E-Instruct": {
+      "p_value": 0.004343509674072266,
+      "risk_diff": 0.11666666666666667,
+      "odds_ratio": 4.0344827586206895
+    }
+  },
+  "latency_pairs": {
+    "openai-gpt-4o-mini": {
+      "hl_difference_ms": -56.151367887988016,
+      "ci_low": -62.417471100131365,
+      "ci_high": -49.05269350175024
+    },
+    "anthropic-claude-3-sonnet-20240229": {
+      "hl_difference_ms": -102.42208480035771,
+      "ci_low": -106.26543852066067,
+      "ci_high": -95.7040822610075
+    },
+    "cohere-command-r-08-2024": {
+      "hl_difference_ms": -136.13121124784345,
+      "ci_low": -144.1611000800815,
+      "ci_high": -128.6386196961143
+    },
+    "meta-llama-Llama-4-Maverick-17B-128E-Instruct": {
+      "hl_difference_ms": -180.98684021880575,
+      "ci_low": -190.73557879823318,
+      "ci_high": -172.24410898278572
+    }
+  },
+  "reliability": {
+    "socratic_quality": {
+      "quadratic_kappa": 0.4686547491556141,
+      "icc2k": 0.7597253811923365,
+      "percent_agreement": 0.5816666666666667
+    },
+    "context_fidelity": {
+      "quadratic_kappa": 0.4984824053874609,
+      "icc2k": 0.780999392190173,
+      "percent_agreement": 0.61
+    }
+  }
+}

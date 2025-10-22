@@ -1,26 +1,133 @@
-\section{Safety, Privacy, and Logging Plan}
-\label{sec:safety}
+\section{Safety, Privacy, and Logging Plan}\label{sec:safety}
 
-\subsection{Data Logging Policy}
-\label{subsec:data_logging_policy}
+This section documents the concrete safety, privacy, and logging controls implemented in our benchmarking system. It reflects the actual harness, evaluation pipeline, and artifacts described in \cref{sec:benchmark_harness,sec:scoring_rubrics}, and operationalizes the Safety \& Ethics criterion in \cref{subsec:safety_ethics}. Because this study used synthetic prompts and did not ingest student data, no real student PII was processed. The prompt bank includes synthetic PII (e.g., ``Jane Doe,'' ``My name is Kshitish'') specifically to validate the effectiveness of the PII detection and sanitization pipeline described in \cref{subsec:sanitization_procedures}. The harness enforces strict logging discipline, includes a sanitization hook, and disables provider-side retention where supported (\cref{subsubsec:security_privacy}). These controls ensure that the same pipeline can be safely applied to future interactive sessions without structural changes.
 
-\subsubsection{Data to be Logged}
-\label{subsubsec:data_logged}
+\subsection{Data Logging Policy}\label{subsec:data_logging_policy}
 
-\subsubsection{Data Explicitly Excluded from Logs}
-\label{subsubsec:data_excluded}
+Our logging policy is designed to capture sufficient telemetry for scientific analysis, reproducibility, and auditing while excluding secrets and direct identifiers. Logging occurs at two levels: (i) per-call JSON/CSV rows and (ii) a normalized SQLite store for efficient queries (\cref{subsubsec:data_persistence}).
 
-\subsection{Sanitization Procedures}
-\label{subsec:sanitization_procedures}
+\subsubsection{Data to be Logged}\label{subsubsec:data_logged}
 
-\subsection{Consent and Ethical Considerations}
-\label{subsec:consent_ethical}
+For each model call, the harness records the following fields (as implemented in \cref{subsubsec:core_functionality,subsubsec:data_persistence}):
 
-\subsection{Data Retention and Deletion Policy}
-\label{subsec:data_retention}
+\begin{itemize}
+\item \texttt{run\_id}, \texttt{date\_time} (UTC), and \texttt{seed}: run provenance and reproducibility metadata.
+\item \texttt{prompt\_id}, \texttt{prompt\_category}: stable identifiers from the curated prompt bank (\cref{subsec:datasets_prompt_bank}).
+\item \texttt{model}, \texttt{model\_version}: provider/model identifiers at execution time; version recorded when the API returns it.
+\item \texttt{latency\_ms}: end-to-end latency measurement.
+\item \texttt{tokens\_in}, \texttt{tokens\_out}: token accounting used for cost and efficiency analysis (\cref{subsec:cost,sec:cost_modelling}).
+\item \texttt{cost\_usd}: computed per \cref{eq:per_call_cost} using the price table recorded with the run (\cref{subsubsec:core_functionality}).
+\item \texttt{http\_status}, optional \texttt{error\_code}/\texttt{error\_message}: reliability taxonomy for failure analysis (\cref{subsubsec:reliability_measurement}).
+\item \texttt{response\_length} and \texttt{response\_text}: text and length for rubric sampling and automated proxies (\cref{subsec:automated_metrics,subsec:sampling_blinding}).
+\end{itemize}
 
-\subsection{Mettle Database Logging Schema}
-\label{subsec:database_schema}
+In the SQLite database, prompts, runs, and responses are normalized into separate tables (see \cref{app:sqlite_schema}). The prompts table stores the exact system/user prompts issued (post-templating) to support traceability and replication (\cref{subsec:datasets_prompt_bank}). A tabular summary of the CSV fields appears in \cref{app:csv_schema}.
 
-\subsubsection{Schema Design Rationale}
-\label{subsubsec:schema_rationale}
+\subsubsection{Data Explicitly Excluded from Logs}\label{subsubsec:data_excluded}
+
+The harness never logs or persists:
+
+\begin{itemize}
+\item Secrets (API keys, tokens) or authorization headers. Credentials are read from an unversioned \verb|.env| and never written to artifacts (\cref{subsubsec:security_privacy}).
+\item Operating-system/user identifiers unrelated to the experiment (e.g., hostnames, usernames).
+\item Provider request/response headers beyond status codes unless required for debugging and explicitly enabled at a high log level (disabled by default).
+\end{itemize}
+
+For this study, all prompts were synthetic and curated for research (\cref{subsec:datasets_prompt_bank}), so no student-provided content was ingested. No real student PII was processed. The prompt bank includes synthetic PII (e.g., ``Jane Doe,'' ``My name is Kshitish,'' ``real\_student@university.edu'') specifically to validate the effectiveness of the PII detection and sanitization pipeline described in \cref{subsec:sanitization_procedures}. These test cases ensure the sanitization hook correctly identifies and redacts common PII patterns (names, email addresses, student IDs) that might appear in live student interactions. If the same pipeline is pointed at live inputs, the sanitization layer ensures that only de-identified text is retained.
+
+\subsection{Sanitization Procedures}\label{subsec:sanitization_procedures}
+
+We integrated a sanitization hook into the harness output pipeline that can redact potential PII from free-text fields prior to persistence. The hook is applied between response parsing and persistence (i.e., it operates on \texttt{response\_text} before CSV/SQLite writes), preserving \texttt{tokens\_in}/\texttt{tokens\_out} counters and latency/cost telemetry.
+
+\begin{itemize}
+\item \textbf{Detection.} A lightweight detector combines pattern-based rules (emails, phone numbers, ID-like numeric strings) with a named-entity recognizer tuned to common PII categories (PERSON, ORG, GPE/LOC). The detector's incident rate is summarized as the ``PII flag rate,'' which we report as a safety correlate in \cref{subsec:automated_metrics} and include in the aggregated score (\cref{eq:overall_score}).
+\item \textbf{Redaction.} Matches are replaced with category placeholders (e.g., \texttt{[REDACTED\_NAME]}, \texttt{[REDACTED\_EMAIL]}), retaining sentence structure for rubric review and automated proxy computation.
+\item \textbf{Scope in this study.} Because all prompts were synthetic and contained no student inputs, the detector did not flag real PII during the benchmark runs; this has been verified via the automated PII proxy (near-zero incident rate). The sanitization hook remains enabled to guard against accidental inclusion of identifying strings in future interactive sessions.
+\end{itemize}
+
+An illustrative (simplified) Python hook used between response parsing and persistence is shown below.
+
+\begin{lstlisting}[language=Python,style=mystyle,caption={Simplified sanitization hook applied before CSV/SQLite persistence.\label{lst:sanitize_hook}}]
+import re
+from typing import Dict
+
+# Basic patterns; the full implementation includes additional entities and unit tests.
+EMAIL_RE = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+PHONE_RE = re.compile(r"\b(?:\+\d{1,3}[- ]?)?(?:\d{3}[- ]?){2}\d{4}\b")
+ID_RE    = re.compile(r"\b\d{6,}\b")  # ID-like numeric strings
+
+def sanitize_text(text: str) -> str:
+	if not text:
+		return text
+	text = EMAIL_RE.sub("[REDACTED_EMAIL]", text)
+	text = PHONE_RE.sub("[REDACTED_PHONE]", text)
+	text = ID_RE.sub("[REDACTED_ID]", text)
+	return text
+
+def sanitize_and_persist(row: Dict[str, object]) -> None:
+	# Redact free-text before writing artifacts; do not alter token/latency telemetry.
+	txt = row.get("response_text", "")
+	row["response_text"] = sanitize_text(txt)
+	# ... write to CSV and SQLite using the schema in Appendix C ...
+
+# Example row shape aligns with Section 5 and Appendix C
+row = {
+	"prompt_id": "p-042",
+	"model": "gpt-4o-mini",
+	"latency_ms": 742.1,
+	"tokens_in": 312,
+	"tokens_out": 158,
+	"cost_usd": 0.0012,
+	"http_status": 200,
+	"response_text": "You can email me at student@example.edu to confirm.",
+}
+sanitize_and_persist(row)
+\end{lstlisting}
+
+\subsection{Consent and Ethical Considerations}\label{subsec:consent_ethical}
+
+No human-subject data were collected or processed in this study. All analyses used synthetic prompts and model outputs generated by the benchmarking harness (\cref{sec:benchmark_harness}). Consequently, formal participant consent procedures were not applicable. Safety and privacy were still treated as first-class criteria in the evaluation design (\cref{subsec:safety_ethics}), and our pipeline, including the sanitization hook, is structured to support de-identified processing should future interactive sessions be evaluated.
+
+\subsection{Data Retention and Deletion Policy}\label{subsec:data_retention}
+
+We follow data minimization principles while preserving full reproducibility (\cref{sec:reproducibility_guide}).
+
+\begin{itemize}
+\item \textbf{Retention scope.} We retain harness outputs (CSV and SQLite), analysis scripts, and generated reports/figures necessary to reproduce \cref{sec:results,sec:statistical_analysis,sec:cost_modelling}. These artifacts contain synthetic prompts and model outputs only.
+\item \textbf{Retention window.} Research artifacts are stored for up to five years to support replication and longitudinal comparisons. Intermediate scratch logs and high-verbosity traces are ephemeral and discarded after analysis completes (typically within 30 days).
+\item \textbf{Secure deletion.} When artifacts reach end-of-life, they are removed using standard secure deletion procedures. Cloud storage, if used, relies on provider-side deletion with cryptographic shredding guarantees.
+\end{itemize}
+
+\subsection{Harness Logging Schema}\label{subsec:database_schema}
+
+The harness persists per-call records to CSV and to a normalized SQLite schema (\cref{subsubsec:data_persistence}). The principal fields are:
+
+\begin{itemize}
+\item Identifiers: \texttt{run\_id}, \texttt{prompt\_id}, \texttt{prompt\_category}, \texttt{model}, \texttt{model\_version}, \texttt{date\_time}.
+\item Telemetry: \texttt{latency\_ms}, \texttt{tokens\_in}, \texttt{tokens\_out}, \texttt{response\_length}.
+\item Economics: \texttt{cost\_usd} per \cref{eq:per_call_cost}, plus the price sheet snapshot in run metadata used in \cref{sec:cost_modelling}.
+\item Reliability: \texttt{http\_status}, optional \texttt{error\_code}/\texttt{error\_message} with the error taxonomy in \cref{subsubsec:reliability_measurement}.
+\item Text: \texttt{response\_text} (subject to sanitization in \cref{subsec:sanitization_procedures}); the prompts table stores the exact issued system/user prompts (\cref{subsec:datasets_prompt_bank}).
+\end{itemize}
+
+\subsubsection{Schema Design Rationale}\label{subsubsec:schema_rationale}
+
+\begin{itemize}
+\item \textbf{Comparability and analyzability.} Normalizing prompts, runs, and responses supports efficient joins for per-category analyses, hypothesis tests, and figure generation in \cref{sec:results}.
+\item \textbf{Traceability.} Stable identifiers and stored prompt text enable end-to-end provenance from prompt specification to human ratings (\cref{subsec:data_sources}).
+\item \textbf{Anonymity by design.} Because the corpus is synthetic, no direct identifiers are present. The sanitization layer (\cref{subsec:sanitization_procedures}) ensures de-identification if live inputs are processed.
+\item \textbf{Operational metrics.} Fields align with evaluation axes in \cref{sec:evaluation_criteria} (latency, reliability, cost) and feed downstream analyses in \cref{sec:statistical_analysis,sec:cost_modelling,sec:experiments}.
+\end{itemize}
+
+\subsection{Operational Safeguards}\label{subsec:operational_safeguards}
+
+We complement data policies with runtime safeguards:
+
+\begin{itemize}
+\item \textbf{Credential hygiene.} Provider keys are loaded from an untracked \verb|.env| and never emitted to logs (\cref{subsubsec:security_privacy}).
+\item \textbf{Provider retention controls.} Where APIs allow, data retention and training-use flags are disabled for requests; this setting is recorded in run metadata.
+\item \textbf{Prompt discipline.} System prompts enforce Socratic, non-disclosing behavior (\cref{subsec:few_shot_prompts}), and automated hallucination and PII proxies are monitored (\cref{subsec:automated_metrics}).
+\item \textbf{Failure handling.} Standardized error classes and bounded retries avoid accidental replay storms and provide reliable tallies for \cref{subsubsec:reliability_measurement}.
+\end{itemize}
+
+Together, these controls align the implemented harness with the Safety \& Ethics objective \big(10\% weight in \cref{tab:criteria_weights}\big) and provide an auditable, privacy-preserving foundation for the results and decisions presented in \cref{sec:results,sec:decision}.

@@ -1,23 +1,189 @@
-\section{Practical Appendix: Reproducibility Guide}
+\section{Practical Appendix: Harness Reproducibility}
 \label{sec:reproducibility_guide}
 
-\subsection{Code and Repository Layout}
-\label{subsec:code_layout}
+This appendix details how to recreate the benchmark runs and downstream analyses that underpin \cref{sec:results,sec:statistical_analysis,sec:cost_modelling,sec:decision}. It aligns the production harness of \cref{sec:benchmark_harness} with the LaTeX repository that assembles this paper, and cites the schemas in \cref{app:csv_schema,app:sqlite_schema} and the prompt listings in \cref{tab:system_prompts,tab:prompt_bank}.
 
-\subsection{Step-by-Step Execution Instructions}
-\label{subsec:execution_instructions}
+\subsection{Repositories and Layout}
+\label{subsec:repo_layout}
 
-\subsection{Sample GitHub Actions Workflow}
-\label{subsec:github_actions}
+The workflow uses two sibling repositories checked out under a common parent directory:
+\begin{verbatim}
+.
++-- CS399-paper/
+|   +-- code/
+|   +-- data/
+|   +-- figures/
+|   \-- sections/
+\-- llm-harness/
+    +-- adapters/
+    +-- analysis/
+    +-- data/
+    +-- docs/
+    +-- results/
+    +-- templates/
+    +-- tests/
+    \-- web/
+\end{verbatim}
 
-\subsection{Database Logging Table Definitions}
-\label{subsec:database_tables}
+Key directories and their supporting roles:
+\begin{itemize}
+	\item \texttt{llm-harness/adapters/}: provider adapters referenced in \cref{subsubsec:adapter_interface}.
+	\item \texttt{llm-harness/analysis/}: aggregation and reporting scripts that transform raw telemetry into the metrics consumed by \cref{sec:statistical_analysis,sec:results}.
+	\item \texttt{llm-harness/results/raw\_output/}: append-only CSV exports per run, structured according to \cref{app:csv_schema}; companion SQLite files live in \texttt{results/} and follow \cref{app:sqlite_schema}.
+	\item \texttt{llm-harness/docs/technical-handbook.md}: operational handbook that elaborates concurrency, observability, and CI/CD practices summarized in \cref{subsubsec:core_functionality,subsec:analysis_reporting}.
+	\item \texttt{CS399-paper/code/}: reproducibility scripts that reshape harness exports into the tables and figures cited throughout the manuscript.
+	\item \texttt{CS399-paper/data/}: canonical CSV/JSON artifacts (pairwise contrasts, prompt-level matrices, statistical summaries) ingested by \cref{sec:results,sec:statistical_analysis,sec:decision}.
+\end{itemize}
 
-\subsection{Sample System Prompts and Test Prompts}
+Prompt catalogs in \texttt{llm-harness/data/test\_prompts.json} and \texttt{llm-harness/data/system\_prompts.json} map directly to Appendix~B (\cref{tab:prompt_bank,tab:system_prompts}); any changes in the harness prompt bank must be reflected in those appendices to preserve traceability.
+
+\subsection{Environment Provisioning and Secrets}
+\label{subsec:env_setup}
+
+\begin{enumerate}
+	\item Provision Python~3.11 (or newer) and create a fresh environment:
+	\begin{verbatim}
+	conda create --name llm-harness-env python=3.11 -y
+	conda activate llm-harness-env
+	\end{verbatim}
+	Alternative: \texttt{python -m venv .venv} followed by platform-specific activation.
+	\item Install harness dependencies from the repository root:
+	\begin{verbatim}
+	pip install -e .[dev]
+	# optional visualization extras for HTML/PDF reports
+	pip install -e .[viz]
+	\end{verbatim}
+	\item Copy the environment template and supply provider credentials, mirroring the security controls in \cref{subsubsec:security_privacy}:
+	\begin{verbatim}
+	copy .env.example .env
+	\end{verbatim}
+	Populate \texttt{.env} with API keys (OpenAI, Anthropic, Google, Cohere, Hugging Face) and optional mock-provider toggles. Secrets remain outside version control.
+		\item Install LaTeX tooling (MiKTeX or TeX Live 2024+) and ensure \texttt{latexmk} is available for building the manuscript. Required packages are declared in \texttt{preamble.sty}.
+		\item Reuse the harness environment when running scripts under \texttt{CS399-paper/}; it already includes \texttt{pandas}, \texttt{numpy}, \texttt{scipy}, and \texttt{matplotlib}, which are the only runtime dependencies for the paper code.
+\end{enumerate}
+
+\subsection{Running and Auditing Benchmark Jobs}
+\label{subsec:harness_execution}
+
+The sequence below regenerates the raw telemetry used in \cref{sec:results,sec:statistical_analysis,sec:decision}.
+
+\begin{enumerate}
+	\item From \texttt{llm-harness/}, validate configuration without issuing live calls (\cref{subsubsec:execution_modes}):
+	\begin{verbatim}
+	python main.py --dry-run --prompt-range 1-3
+	\end{verbatim}
+	This checks adapter imports, prompt schemas, and secrets.
+	\item Execute the full benchmark with the Socratic system prompt and all configured providers:
+	\begin{verbatim}
+	python main.py --system_prompt strict_socratic
+	\end{verbatim}
+	Optional flags (documented in \texttt{README.md}) allow targeted runs, e.g. \texttt{--model gemini-2.5-flash}, \texttt{--category estimation}, or \texttt{--prompt-range 1-60}. Concurrency and rate-limiting defaults match \cref{subsubsec:core_functionality}.
+	\item Inspect run logs in \path{logs/}. The structured CSV lands in \path{results/raw_output/benchmark_results_<timestamp>.csv}. When SQLite exports are enabled, the normalized database is written to \path{results/sqlite/benchmark_<timestamp>.db} (see \cref{subsubsec:data_persistence}).
+	\item Generate HTML/PDF reports to mirror the executive artifacts referenced in \cref{subsec:analysis_reporting}:
+	\begin{verbatim}
+	python analysis/generate_report.py \
+			results/raw_output/benchmark_results_<timestamp>.csv --type html
+	python analysis/generate_report.py \
+			results/raw_output/benchmark_results_<timestamp>.csv --type pdf
+	\end{verbatim}
+	\item Record the provenance of the run: commit hash (\texttt{git rev-parse HEAD}), \texttt{models.json}, \texttt{requirements.txt}, and a sanitized copy of \texttt{.env}. These artefacts are cited in \cref{subsec:determinism} and support audits of the latency and cost findings in \cref{fig:cdf_latency,fig:latency_forest}.
+\end{enumerate}
+
+For human evaluation exports, use the harness utilities described in \texttt{docs/technical-handbook.md} to sample transcripts and capture rater assignments; the resulting CSVs feed the adjudication workflow summarized in \cref{subsubsec:evaluation_protocol}.
+
+\subsection{Bridging Harness Outputs to Manuscript Artifacts}
+\label{subsec:paper_bridge}
+
+Harness runs feed the paper through a deterministic transformation pipeline:
+\begin{enumerate}
+	\item Create a raw-data staging area inside the manuscript repository:
+	\begin{verbatim}
+	mkdir CS399-paper\data\raw
+	copy llm-harness\results\raw_output\benchmark_results_<timestamp>.csv \
+			 CS399-paper\data\raw\benchmark_results_<timestamp>.csv
+	\end{verbatim}
+	\item Produce derived prompt-level metrics and operational summaries using the harness analytics. The commands below write outputs directly into the paper's \texttt{data/} directory so that \cref{sec:results} can consume them:
+	\begin{verbatim}
+	python analysis/comparative_analysis.py \
+			results/raw_output/benchmark_results_<timestamp>.csv \
+			--output-file ..\CS399-paper\data\statistical_summary.json
+
+	python analysis/generate_report.py \
+			results/raw_output/benchmark_results_<timestamp>.csv \
+			--type csv --output-dir ..\CS399-paper\data
+	\end{verbatim}
+	The CSV export yields the following files, matching the structure expected by \path{CS399-paper/code/make_figures.py} and \path{code/statistical_analysis.py}:
+	\begin{itemize}
+		\item \path{prompt_level_metrics.csv}
+		\item \path{summary_metrics.csv}
+		\item \path{category_summary.csv}
+		\item \path{category_win_counts.csv}
+		\item \path{error_breakdown.csv}
+	\end{itemize}
+	\item Regenerate inferential statistics and visualizations from within \texttt{CS399-paper/}:
+	\begin{verbatim}
+	python code/statistical_analysis.py
+	python code/make_figures.py
+	\end{verbatim}
+	These scripts emit:
+	\begin{itemize}
+		\item \path{data/pedagogical_pairwise.csv}
+		\item \path{data/context_pairwise.csv}
+		\item \path{data/inclusion_pairwise.csv}
+		\item \path{data/latency_pairwise.csv}
+	\end{itemize}
+	They also regenerate the figures used in \cref{sec:results,sec:statistical_analysis}.
+	\item Compile the manuscript and resolve cross-references:
+	\begin{verbatim}
+	latexmk -pdf -outdir=build main.tex
+	\end{verbatim}
+	Re-run once if \texttt{latexmk} reports unresolved references; this updates citations such as \cref{fig:effect_size_heatmap,fig:context_inclusion_diff,fig:latency_forest,fig:cdf_latency}.
+\end{enumerate}
+
+Every generated artifact is tied to a specific harness run ID recorded in \texttt{data/statistical\_summary.json}, enabling round-trip audits between \cref{sec:results} and the raw telemetry.
+
+\subsection{Prompt Bank and System Templates}
 \label{subsec:sample_prompts}
 
-\subsubsection{Primary System Prompt Template (Strict Socratic)}
-\label{subsubsec:primary_prompt}
+The benchmark harness consumes the prompt catalog in \path{llm-harness/data/test_prompts.json}. Companion system templates live at \path{llm-harness/data/system_prompts.json}. These files are rendered verbatim in Appendix~B (\cref{tab:prompt_bank,tab:system_prompts}) and instantiated at run time through the templating pipeline documented in \cref{subsec:datasets_prompt_bank}. The harness persists the resolved system/user prompts for each call (\cref{subsubsec:data_persistence}), enabling downstream audits of controllability (\cref{subsec:pedagogical_quality,subsec:contextual_adaptability}) and safety (\cref{sec:safety}).
 
-\subsubsection{Sample Canonical Test Prompts}
-\label{subsubsec:sample_prompts}
+\subsection{Integration Runbook}
+\label{subsec:integration_runbook}
+
+The integration plan translates the evaluated configuration into deployment-ready steps. All stages rely on the reproducible harness assets described in \cref{sec:benchmark_harness} and the reproducibility guardrails established in preceding subsections.
+
+\paragraph{1.~Environment preparation.} Clone the repository, create the Python environment specified alongside the harness (\texttt{requirements.txt}), and load provider credentials into the untracked \verb|.env| file. Validate adapters using the configuration checks in \cref{subsubsec:config_validation}; the process confirms API availability and exits on missing dependencies.
+
+\paragraph{2.~Prompt and template provisioning.} Import the curated prompt bank and system templates documented in \cref{tab:prompt_bank,tab:system_prompts}. Apply the strict Socratic template and temperature $T=0.3$ defaults endorsed by \cref{subsubsec:few_shot_results,subsubsec:temperature_results}. For context-rich interactions enable ephemeral user-prompt injection per \cref{subsec:contextualization_test} to minimize token load.
+
+\paragraph{3.~Harness execution.} Launch the benchmarking harness with Gemini 2.5 Flash enabled (primary) and Command R 08-2024 optionally staged as a fallback. Use the scheduler limits codified in \cref{subsubsec:core_functionality} (bounded concurrency, per-provider cooldowns) and preserve structured logs for traceability. Persist raw outputs to CSV/SQLite as described in \cref{subsubsec:data_persistence}.
+
+\paragraph{4.~Quality assurance loop.} Execute the statistical analysis script (\texttt{code/statistical\_analysis.py}) to regenerate the inferential statistics and figures in \cref{sec:statistical_analysis}. Confirm that pedagogical and fidelity scores remain within the 95\% CI envelopes reported in \cref{tab:summary_scores} and that pairwise $q$-values stay below the FDR threshold where expected. Trigger the human evaluation workflow in \cref{subsec:human_evaluation} if material drift is detected.
+
+\paragraph{5.~Operational hardening.} Configure monitoring based on the telemetry schema in \cref{subsubsec:data_logged}: track latency, inclusion rate, hallucination flags, and PII proxy counts (\cref{tab:pii_proxy_counts}). Enforce the sanitization hook (\cref{subsec:sanitization_procedures}) before persisting transcripts and adhere to the retention controls in \cref{subsec:data_retention}. Incorporate price-table refreshes and routing ratio recalibration into the monthly review cycle using the sensitivity framework in \cref{subsec:decision_sensitivity}.
+
+\paragraph{6.~Deployment handoff.} Package the validated configuration (prompt set, adapter parameters, routing ratio) and deliver it with the integration checklist to the Mettle platform team. Because the harness artifacts already satisfy the reproducibility requirements established in this section, the deployment team inherits a documented, scriptable pathway for re-runs, regression checks, and incident response.
+
+This runbook operationalizes the empirical findings of the study: it keeps the Gemini-led tutoring experience aligned with the measured strengths in \cref{sec:results}, retains Command R as a controlled budget lever, and preserves the safety, privacy, and logging posture established in \cref{sec:safety}.
+
+\subsection{Determinism, Seeds, and Versioning}
+\label{subsec:determinism}
+
+\begin{itemize}
+	\item Prompt sampling, rater assignment, and bootstrap resampling use fixed seeds recorded in run metadata (\cref{subsubsec:data_collection,subsubsec:evaluation_protocol}); reruns with identical seeds reproduce the same prompt ordering and confidence intervals reported in \cref{sec:statistical_analysis}.
+	\item Adapter versions, model identifiers, tokenizer builds, and provider price sheets are captured per run (\cref{subsubsec:core_functionality}). \texttt{statistical\_summary.json} stores these provenance fields so that latency and cost comparisons (\cref{fig:cdf_latency,sec:cost_modelling}) can be interpreted in context.
+	\item Git commit hashes for both repositories are logged in the report headers generated by \path{analysis/generate_report.py} and mirrored in the manuscript metadata, ensuring that \cref{sec:decision,sec:reproducibility_guide} always reference a concrete code/document pair.
+\end{itemize}
+
+\subsection{Threats to Harness Reproducibility}
+\label{subsec:repro_threats}
+
+Provider-side changes (model revisions, implicit rate limits), tokenizer drift, and pricing updates can shift raw metrics even when the harness configuration is unchanged. We mitigate these risks by:
+\begin{itemize}
+	\item Logging HTTP status, retry counts, and backoff behaviour to detect throttling (\cref{subsubsec:core_functionality,subsubsec:rate_limiting_results}).
+	\item Persisting price tables and token counts with every run so that cost analyses in \cref{sec:cost_modelling} can be recomputed under updated tariffs.
+	\item Documenting sanitization hooks and PII detections (\cref{subsec:sanitization_procedures,tab:pii_proxy_counts}) so that safety posture changes remain auditable.
+	\item Versioning the prompt bank and human-rating rubrics to guard against silent content drift (\cref{sec:scoring_rubrics,subsec:human_evaluation}).
+\end{itemize}
+
+Residual variability may persist when providers silently ship model updates or enforce dynamic throttling. Section~\ref{sec:limitations} and \cref{subsec:future_directions} outline complementary experiments (e.g., longitudinal monitoring, routing policies) that track and mitigate these externalities while preserving the reproducibility guarantees enumerated here.

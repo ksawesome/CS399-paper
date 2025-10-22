@@ -24,13 +24,15 @@
 \hrule
 
 \vspace{3mm}
-\begin{tabular}{ll} 
-Name:           	        & {\studentname}   \\ 
-Student Number: 	        & {\studentnumber} \\ 
-Research Centre: 	        & {\researchcentre}  \\ 
-Research Project Title: 	& {\projecttitle}  \\ 
-Primary Supervisor: 	    & {\supervisor}  \\ 
-\end{tabular}
+\begin{tabularx}{0.75\textwidth}{@{}lX@{}}
+	\toprule
+	\textbf{Field} & \textbf{Details} \\ \midrule
+Name & \studentname \\
+Research Centre & \researchcentre \\
+Research Project Title & \projecttitle \\
+Primary Supervisor & \supervisor \\
+\bottomrule
+\end{tabularx}
 
 \vspace{3mm}
 \hrule
@@ -41,8 +43,13 @@ Primary Supervisor: 	    & {\supervisor}  \\
 
 \newpage
 
+% Set table of contents depth to 2 (sections and subsections only)
+\setcounter{tocdepth}{2}
+
 \tableofcontents
+\newpage
 \listoffigures
+\newpage
 \listoftables
 
 \newpage
@@ -64,11 +71,8 @@ Primary Supervisor: 	    & {\supervisor}  \\
 \appendix
 
 \import{appendices/A_Full_Human_Rubric/}{A_Full_Human_Rubric.tex}
-\import{appendices/}{B_Complete_Prompt_Bank.tex}
-\import{appendices/C_Schemas/}{C_Schemas.tex}
-\import{appendices/D_Benchmark_Harness/}{D_Benchmark_Harness.tex}
-\import{appendices/}{E_GitHub_Actions_YAML.tex}
-\import{appendices/}{F_Reproducibility_Checklist.tex}
-\import{appendices/}{G_Glossary.tex}
+\import{appendices/B_Complete_Prompt_Bank/}{B_Complete_Prompt_Bank.tex}
+\import{appendices/C_Harness_and_Reproducibility/}{C_Harness_and_Reproducibility.tex}
+\import{appendices/D_Glossary/}{D_Glossary.tex}
 
 \end{document}

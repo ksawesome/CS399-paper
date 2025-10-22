@@ -1,14 +1,94 @@
-\section{Scoring Rubrics \& Aggregation}
-\label{sec:scoring_rubrics}
+\section{Scoring Rubrics \& Aggregation}\label{sec:scoring_rubrics}
 
-\subsection{Socratic Quality Rubric (Human)}
-\label{subsec:socratic_quality_rubric}
+This section documents the measurement instruments and aggregation procedures we use to score and compare models along the pedagogical axes specified in \cref{sec:evaluation_criteria}. All human ratings are collected via the pipeline described in \cref{subsec:human_evaluation}, with blinded raters, adjudication for disagreements, and structured logging to ensure traceability. Automated text features computed by the harness post-processing step (\cref{subsubsec:data_persistence}) complement human judgments and are used both as proxies and as consistency checks.
 
-\subsection{Context Fidelity Rubric}
-\label{subsec:context_fidelity_rubric}
+\subsection{Socratic Quality Rubric (Human)}\label{subsec:socratic_quality_rubric}
 
-\subsection{Automated Metrics}
-\label{subsec:automated_metrics}
+We assess pedagogical effectiveness using a five-dimension Socratic rubric aligned to the intent of \cref{subsec:pedagogical_quality}. Raters assign integer scores on a 1--5 scale per dimension; higher is better. The dimensions are summarized in \cref{tab:socratic_dimensions}.
 
-\subsection{Aggregation \& Weighting}
-\label{subsec:aggregation_weighting}
+\begin{table}[t]
+\centering
+\caption{Socratic Quality Rubric: Five dimensions scored on a 1--5 scale.}
+\label{tab:socratic_dimensions}
+\begin{tabularx}{\textwidth}{@{}l X@{}}
+\toprule
+\textbf{Dimension} & \textbf{Description} \\ \midrule
+Question-Orientation & Preference for asking targeted, open-ended questions rather than providing declarative answers. High-scoring responses elicit student reasoning. \\
+Relevance & Alignment of questions with the student's current state, misapprehensions, and concrete task. Irrelevant probes reduce cognitive traction. \\
+Scaffolding Depth & Decomposition of the task into manageable steps that build toward the goal, with contingent prompts that adapt to likely student responses. \\
+Clarity \& Tone & Clear phrasing, supportive and non-condescending tone, avoidance of unnecessary jargon for the learner's level. \\
+Factual Correctness & Absence of misleading premises embedded in questions; numerically or conceptually incorrect prompts are penalized. \\ \bottomrule
+\end{tabularx}
+\end{table}
+
+\FloatBarrier
+
+Each transcript is independently rated by two raters. We compute per-item and per-model means, and we estimate inter-rater reliability (IRR) using weighted Cohen's $\kappa$ for ordinal scores and the two-way random-effects intraclass correlation coefficient (ICC[2,k]). Disagreements exceeding a pre-specified threshold (absolute difference $\geq 2$ on any dimension or $\geq 1.5$ on the average) are adjudicated by a third rater, following the protocol in \cref{subsubsec:evaluation_protocol}. Raters are blinded to the model identity and cost/performance metadata to prevent anchoring.
+
+\paragraph{Evidence artifacts.} For transparency, we retain de-identified examples representative of low/medium/high rubric scores per model. These are used qualitatively in \cref{sec:results} to contextualize quantitative differences.
+
+\subsection{Context Fidelity Rubric (Human)}\label{subsec:context_fidelity_rubric}
+
+For prompts with instructor-provided context, we evaluate contextual adaptability (\cref{subsec:contextual_adaptability}) with a compact rubric:
+
+\begin{itemize}
+	\item \textbf{Context inclusion} (binary 0/1): Whether the response explicitly leverages any of the specified constraints, data, or requirements.
+	\item \textbf{Fidelity} (1--5): Degree to which referenced context is used correctly (numbers, units, constraints). Misinterpretations or inconsistent references reduce the score.
+	\item \textbf{No hallucination} (binary 0/1): Whether the response avoids introducing unsupported numerical values or external assumptions absent from the prompt/context.
+\end{itemize}
+
+These ratings are performed alongside the Socratic rubric by the same blinded raters. We report inclusion rate, mean fidelity, and hallucination-free rate per model, with exact-binomial 95\% confidence intervals for the binary components.
+
+\subsection{Automated Metrics (Proxies)}\label{subsec:automated_metrics}
+
+To triangulate human judgments, we compute lightweight automated proxies during post-processing (see \cref{subsubsec:data_persistence}):
+
+\begin{itemize}
+	\item \textbf{Question ratio}: Fraction of sentences ending in a question mark. This correlates with question-orientation and is used as a coarse proxy for \cref{subsec:pedagogical_quality}.
+	\item \textbf{Keyword/context coverage}: Proportion of specified context tokens found in the response (exact or case-insensitive match), mirroring the inclusion aspect of \cref{subsec:contextual_adaptability}.
+	\item \textbf{Numeric fidelity}: Share of numeric mentions that match context-provided values within a tolerance band (default $\pm1\%$ absolute or unit-consistent rounding), penalizing extraneous numbers.
+	\item \textbf{Readability}: Flesch Reading Ease (higher is easier) as an objective proxy for clarity; we also log response length to rule out degenerate short outputs.
+	\item \textbf{PII flag rate}: Incidence of automated PII detector flags as a safety correlate, supporting \cref{subsec:safety_ethics}.
+\end{itemize}
+
+We treat these metrics as auxiliary. They are not substitutes for human scoring but help detect anomalies (e.g., high question ratio with poor human scores suggests superficial questioning).
+
+\subsection{Data Sources and Provenance}\label{subsec:data_sources}
+
+All evaluation data originate from the benchmark harness described in \cref{sec:benchmark_harness}. We summarize the sources and how artifacts are produced and linked:
+
+\begin{itemize}
+	\item \textbf{Prompt bank:} Prompts are taken from the curated bank described in \cref{subsec:datasets_prompt_bank}. Each prompt record includes a stable \verb|prompt_id|, category label, and optional instructor-provided context. At run time, the harness resolves any template variables and records the exact system and user prompts issued.
+	\item \textbf{Model outputs:} For every model call, the harness persists a row to CSV and SQLite with identifiers and telemetry as detailed in \cref{subsubsec:data_persistence} (e.g., \verb|prompt_id|, \verb|model|, \verb|model_version|, \verb|latency_ms|, \verb|tokens_in|/\verb|tokens_out|, \verb|cost_usd|, and the \verb|response_text|). These constitute the corpus from which human samples are drawn.
+	\item \textbf{Human scoring exports:} The evaluation pipeline (\cref{subsubsec:evaluation_interface,subsubsec:evaluation_protocol,subsubsec:data_collection}) exports de-identified transcripts for rating. Each transcript carries the stable identifiers from the raw outputs (\verb|prompt_id|, model, and run metadata) so ratings can be merged back without ambiguity. Rater IDs are anonymized; timestamps and adjudication decisions are logged.
+	\item \textbf{Derived features:} Automated proxies (\cref{subsec:automated_metrics}) are computed from the \verb|response_text| and the prompt/context tokens and stored alongside the raw records as described under ``Derived features'' in \cref{subsubsec:data_persistence}. This ensures a single, queryable store for human and automated measurements.
+	\item \textbf{Exclusions and audit trail:} Any exclusion (e.g., truncated response, API error, or corrupted record) is recorded with an \verb|error_code|/\verb|error_message| per \cref{subsubsec:core_functionality}. We retain an audit trail mapping sampling lists, rating assignments, and adjudication outcomes to the underlying raw artifacts.
+\end{itemize}
+
+Together, these practices provide a complete provenance chain from prompt specification through model execution and human assessment, enabling reproducible recomputation of all scores reported in \cref{sec:results,sec:statistical_analysis}.
+
+\subsection{Sampling, Blinding, and Reliability}\label{subsec:sampling_blinding}
+
+From each model's corpus we sample a balanced subset stratified by prompt category (\cref{subsec:datasets_prompt_bank}), ensuring a minimum per stratum. Sampling uses a fixed seed recorded with the run metadata (\cref{subsubsec:data_persistence}). Raters receive de-identified, shuffled transcripts with no model or cost labels (\cref{subsubsec:evaluation_interface}). We compute IRR statistics per dimension and overall; if IRR falls below the target band ($\kappa<0.6$ or ICC$<0.7$), we pause and re-calibrate (\cref{subsubsec:evaluation_protocol}).
+
+\subsection{Aggregation \& Weighting}\label{subsec:aggregation_weighting}
+
+We aggregate into criterion-level and overall scores consistent with \cref{sec:evaluation_criteria}. Per-criterion measures combine human and automated signals using simple linear models calibrated on the development set; in the primary analysis we use a transparent weighted average with human scores dominating. Let $Q$ denote the mean Socratic rubric score (1--5), $C_{\text{incl}}$ the context inclusion rate, $C_{\text{fid}}$ the mean fidelity (1--5), $C_{\text{hall}}$ the no-hallucination rate, and $A_i$ the standardized automated proxies. We compute a context score
+
+\begin{equation}
+S_{\text{context}} = \alpha_1 \, C_{\text{incl}} + \alpha_2 \, \tilde{C}_{\text{fid}} + \alpha_3 \, C_{\text{hall}},
+\label{eq:context_score}
+\end{equation}
+
+where $\tilde{C}_{\text{fid}}$ rescales the 1--5 fidelity to $[0,1]$ and $(\alpha_1,\alpha_2,\alpha_3)$ sum to 1 (default 0.25/0.5/0.25).
+
+For the overall score, we apply the study weights defined in \cref{sec:evaluation_criteria} (pedagogical quality and contextual adaptability emphasized) and normalize cost/latency in the direction of desirability. Denote by $Z(\cdot)$ a min–max normalization to $[0,1]$ within the candidate set, with inversion for ``lower-is-better'' metrics (cost, latency), and by $w_k$ the criterion weights. The model-level score is
+
+\begin{equation}
+S_{\text{overall}} = w_Q \, Z(Q) + w_{\text{ctx}} \, Z(S_{\text{context}}) + w_{\text{safety}} \, Z(1-\text{PII rate}) + w_{\ell} \, Z(1-\text{latency}) + w_{\$} \, Z(1-\text{cost}) + \cdots,
+\label{eq:overall_score}
+\end{equation}
+
+with $\sum_k w_k = 1$. We report bootstrap 95\% confidence intervals for $Q$ and $S_{\text{context}}$ by resampling prompts within strata and propagate uncertainty to \cref{sec:results}. Sensitivity analyses re-run \cref{eq:overall_score} under alternative weightings (e.g., greater emphasis on \cref{subsec:pedagogical_quality}).
+
+\paragraph{Multiple comparisons and ties.} Where relevant, we perform pairwise comparisons using procedures detailed in \cref{sec:statistical_analysis}. Ties on $S_{\text{overall}}$ are broken lexicographically by $Q$, then by cost.

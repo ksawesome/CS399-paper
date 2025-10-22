@@ -4,8 +4,110 @@
 \subsection{Overview}
 \label{subsec:overview}
 
+We implemented a Python-based benchmarking harness to conduct a controlled, reproducible evaluation of candidate Large Language Models (LLMs) for the Mettle platform. The harness orchestrates end-to-end runs across multiple providers using a uniform adapter interface, executes prompts concurrently under explicit rate limits, records comprehensive telemetry, and exports results for analysis and reporting. By design, the harness operationalizes the evaluation axes defined in \cref{sec:evaluation_criteria}: it logs latency distributions and throughput-related signals (\cref{subsec:latency_throughput}), standardizes error capture and retry behavior for reliability (\cref{subsec:reliability_availability}), measures token usage and converts to dollar-denominated costs (\cref{subsec:cost}), and provides artifacts to support rubric-based scoring of pedagogical quality and contextual adaptability (\cref{subsec:pedagogical_quality,subsec:contextual_adaptability}).
+
+The system supports five model families—OpenAI GPT-4o mini, Anthropic Claude 3 Sonnet, Google Gemini 2.5 Flash, Cohere Command R 08-2024, and Meta Llama 4 Maverick (17B) (via Hugging Face)—via pluggable adapters. Configuration is externalized in JSON files, environment variables, and CLI arguments to enable transparent replication.
+
+\begin{figure}[h!]
+\centering
+\begin{tikzpicture}[
+    node distance=0.5cm and 0.7cm,
+    block/.style={
+        rectangle, 
+        draw, 
+        fill=blue!10, 
+        text width=3.5cm, 
+        text centered, 
+        rounded corners, 
+        minimum height=1.5cm,
+        font=\small
+    },
+    arrow/.style={
+        draw,
+        -Triangle,
+        thick
+    }
+]
+
+% Define the nodes in a grid
+\node[block] (prompt) {Prompt Bank};
+\node[block, right=of prompt] (harness) {Benchmarking Harness};
+\node[block, right=of harness] (api) {Model API};
+
+% Second row of nodes
+\node[block, below=of api] (logger) {Data Logger (CSV)};
+\node[block, left=of logger] (postprocess) {Post-processing \& Automated Metrics};
+\node[block, left=of postprocess] (human) {Human Evaluation (Rubric)};
+
+% Draw the arrows connecting the nodes in a wrapped flow
+\draw[arrow] (prompt) -- (harness);
+\draw[arrow] (harness) -- (api);
+\draw[arrow] (api) -- (logger);
+\draw[arrow] (logger) -- (postprocess);
+\draw[arrow] (postprocess) -- (human);
+
+\end{tikzpicture}
+\caption{The experimental pipeline, from prompt selection to final evaluation.}
+\label{fig:pipeline_grid}
+\end{figure}
+
+
+
+At a high level, the harness comprises five cooperating components: (1) a configuration loader (models, prompts, environment), (2) an execution scheduler that enforces per-provider rate limits and global concurrency, (3) provider adapters that normalize request/response semantics, (4) a telemetry layer that times calls and estimates tokens/costs, and (5) persistence/analysis utilities that save outputs and generate summaries. A lightweight web dashboard provides immediate feedback during runs and supports exploratory analysis post hoc.
+
+The implementation emphasizes three properties: \textit{comparability}, \textit{traceability}, and \textit{repeatability}. Comparability is achieved by normalizing inputs (system/user prompts, temperature), outputs (response text, token counts), and runtime policies (timeouts, retries). Traceability is ensured by structured logs, run metadata (model and dependency versions, timestamps, seeds), and persisted artifacts (CSV and SQLite). Repeatability is supported by pinned dependencies, fixed random seeds for prompt sampling, deterministic scheduling constraints, and explicit storage of the exact prompts issued in each trial. Together, these properties enable independent verification of the results presented in \cref{sec:results}.
+
+To minimize bias from transient provider conditions, the scheduler tracks a global worker pool and per-provider cooldowns so that intermittent failures in one adapter do not stall the entire run or provide undue concurrency advantages to others. This symmetrical treatment is essential for the integrity of latency and reliability metrics reported in \cref{subsec:latency_throughput} and \cref{subsec:reliability_availability}.
+
+In practice, dynamic model loading allows selective execution by name or by category (e.g., "fast", "accurate"). Categories are defined in configuration and enable targeted experiments (for example, latency-focused subsets) without editing code. The harness validates that requested models are available and supported before execution, surfacing clear diagnostics when a configuration is invalid.
+
+
 \subsection{Datasets and Prompt Bank}
 \label{subsec:datasets_prompt_bank}
+
+The experiments employ a comprehensive prompt bank of 120 curated items designed to evaluate LLM performance across diverse educational and technical scenarios relevant to the Mettle platform. Each prompt simulates authentic student-teacher interactions in engineering education, ranging from conceptual questions and estimation tasks to error correction and safety boundary testing. The prompt bank is structured as a JSON file containing: (a) unique identifiers for each prompt, (b) category labels for stratified analysis, (c) the prompt text representing a student query or statement, (d) optional teacher context providing problem-specific parameters, and (e) expected keywords that automated checks use to assess contextual fidelity. Complete listings are provided in \cref{tab:system_prompts,tab:prompt_bank}.
+
+All prompt files are validated on startup against a JSON Schema to prevent malformed inputs. We use Jinja2 templating to instantiate variable placeholders (e.g., physical parameters, numerical values) at run time, allowing controlled variation while preserving comparability across models. For each executed item, the harness stores the exact prompt text, selected system template, and resolved template variables alongside model outputs. These artifacts support downstream human rating for pedagogical quality (\cref{subsec:pedagogical_quality}) and automated fidelity checks for contextual adaptability (\cref{subsec:contextual_adaptability}).
+
+The 120-prompt corpus uses a two-dimensional labeling scheme where each prompt carries both a Topic Category and an Intent Category. The twelve \textbf{Topic Categories} are perfectly balanced with exactly 10 prompts per category, ensuring no single domain dominates aggregate metrics while providing sufficient within-category sampling for statistical power. Topic Categories identify the curricular or domain strand (e.g., ``STEM Physics'', ``Applied Math'', ``CS Systems'') and are used for per-category analyses such as win-count heatmaps (\cref{fig:category_wins}). The twelve \textbf{Intent Categories} have varying counts (ranging from 6 to 14 prompts) weighted by importance to Mettle's pedagogical objectives. Intent Categories encode the pedagogical interaction style (e.g., ``Socratic Probing'', ``Adaptive Contextualization'', ``Safety Challenges'') and are used for rubric-focused analyses. Both labels are stored in the JSON as \texttt{topic\_category} and \texttt{intent\_category}. Complete taxonomy documentation appears in \cref{app:prompts_taxonomy}. This design mitigates ceiling and floor effects by including prompts of varying difficulty and specificity. We randomize prompt order per model to mitigate temporal confounds (e.g., transient provider load, time-of-day effects) and seed the randomization to support reproducibility. The resulting dataset enables 600 total model-prompt pairs (5 models × 120 prompts) for comprehensive statistical analysis.
+
+\paragraph{Prompt categories.} The twelve categories listed below describe the "topic" or curricular strand of each prompt (for example, ``STEM Physics'', ``Applied Math'', or ``CS Systems''). Important methodological note: every prompt in the 120-prompt bank carries two orthogonal labels — a Topic Category and an Intent Category. The Topic Category identifies the curricular or domain area used for analyses like the per-category heatmap in \cref{fig:category_wins} (see \cref{sec:results}), while the Intent Category encodes the pedagogical intent or interaction style (for example, ``Socratic Probing'', ``Adaptive Contextualization'', or ``Safety Challenges'') used to ensure pedagogical diversity in the prompt design and sampling. We explicitly record both labels for each prompt in the harness input JSON (fields: \texttt{topic\_category} and \texttt{intent\_category}); downstream analyses reference the appropriate label depending on the question being asked (topic-based analyses use \texttt{topic\_category}; pedagogical diversity and rubric sampling use \texttt{intent\_category}).
+
+For clarity: Fig.~\ref{fig:category_wins} and the associated per-category win counts use Topic Categories (curricular strands) when aggregating wins. Intent-driven analyses (for example, refusal rates, Socratic-quality breakdowns) are reported using Intent Categories.
+
+The twelve topic categories are designed to align with the eight evaluation criteria in \cref{sec:evaluation_criteria} and probe distinct pedagogical and technical capabilities:
+
+\begin{enumerate}[leftmargin=*, topsep=0pt, itemsep=4pt]
+    \item \textbf{Applied Math} -- Engineering mathematics problems requiring numerical calculations, unit conversions, and quantitative reasoning (e.g., power calculations, work-energy relationships).
+    
+    \item \textbf{CS Algorithms} -- Computer science scenarios involving algorithmic thinking, complexity analysis, and computational problem-solving strategies.
+    
+    \item \textbf{CS Systems} -- Systems-level computer science topics including architecture, operating systems, networking, and distributed systems concepts.
+    
+    \item \textbf{History \& Civics} -- Non-technical prompts testing the model's ability to recognize out-of-scope requests and redirect students appropriately while maintaining Socratic pedagogical standards.
+    
+    \item \textbf{Instructional Design} -- Meta-level prompts about teaching strategies, learning scaffolds, and pedagogical approaches, testing the model's understanding of educational principles.
+    
+    \item \textbf{Language Learning} -- Foreign language translation or learning requests that fall outside Mettle's technical scope, evaluating boundary recognition and graceful refusal.
+    
+    \item \textbf{Literature Analysis} -- Humanities-focused prompts (literary interpretation, textual analysis) used to assess scope adherence and subject matter boundaries.
+    
+    \item \textbf{Numeracy Basics} -- Fundamental arithmetic and numerical literacy scenarios, testing basic quantitative reasoning and the ability to scaffold elementary concepts.
+    
+    \item \textbf{Productivity \& Ops} -- Practical engineering workflow questions about project management, documentation practices, and operational considerations in technical projects.
+    
+    \item \textbf{Safety \& Alignment} -- Adversarial prompts designed to test safety guardrails, including requests for personal information handling, academic integrity violations, inappropriate assistance, and out-of-bounds behavior.
+    
+    \item \textbf{Socratic Dialogue} -- Core Socratic method scenarios where students present flawed reasoning or incomplete solutions, requiring the model to guide discovery without revealing answers directly.
+    
+    \item \textbf{STEM Physics} -- Physics-based engineering estimation problems covering mechanics, thermodynamics, electricity, and other physical principles central to engineering education.
+\end{enumerate}
+
+Representative items from each category appear in \cref{tab:prompt_bank}. Categories directly probe skills evaluated in \cref{subsec:pedagogical_quality} (Socratic Dialogue, Instructional Design), \cref{subsec:contextual_adaptability} (Applied Math, STEM Physics with teacher context), \cref{subsec:safety_ethics} (Safety \& Alignment), and scope adherence (History \& Civics, Language Learning, Literature Analysis). The balanced distribution ensures that statistical comparisons reflect overall model capability rather than strength in any single domain.
+
+\paragraph{System prompt variants.}\label{tab:system_prompts} We use several system prompt templates to control model behavior: a strict Socratic style (default), a neutral instruction-following baseline, and a hybrid conversational mode. The exact wording is documented in this section, and the variants are used to evaluate controllability and sensitivity (see \cref{subsec:explainability_controllability}).
+
+\paragraph{Context fidelity checks.} For each prompt, the bank specifies key phrases or numeric values expected to appear when context is faithfully used. Automated checks compute (a) inclusion rate of context tokens, (b) numerical fidelity (exact value or tolerance band), and (c) hallucination flags when out-of-context values are introduced. These form the automated component of \cref{subsec:contextual_adaptability}.
 
 \subsection{Harness Implementation Details}
 \label{subsec:harness_implementation}
@@ -13,20 +115,194 @@
 \subsubsection{Core Functionality}
 \label{subsubsec:core_functionality}
 
+Execution proceeds in four stages. First, configuration is loaded: model definitions from a \verb|models.json| file (with per-model rate limits, timeouts, temperature, and category tags), environment variables from \verb|.env|, and prompt specifications from JSON files. Second, the harness performs capability checks, including library availability per provider, adapter import validation, and API key probing. Third, it executes the benchmark loop with bounded concurrency and per-provider throttling. Each API call is wrapped with structured timing, token counting, and cost estimation. Fourth, results are persisted to CSV and to a SQLite database for efficient querying.
+
+For robustness, the harness employs automatic retries with exponential backoff on transient failures, standardized error dictionaries (\verb|error_code|, \verb|error_message|), and explicit handling of rate-limit responses. Latency is recorded as \verb|latency_ms|; token usage is tracked as \verb|tokens_in| and \verb|tokens_out| with a consistent tokenizer; costs are reported in USD per call using provider price sheets at the time of the study. These measurements underpin \cref{subsec:latency_throughput}, \cref{subsec:reliability_availability}, and \cref{subsec:cost}.
+
+\paragraph{Concurrency and rate limiting.} The scheduler bounds the number of in-flight requests and enforces a minimum inter-call interval per provider (e.g., 10 s) to reduce 429 responses. Concurrency is tuned to avoid overwhelming slower APIs while keeping faster endpoints saturated enough to yield stable latency estimates (median and 95th percentile; see \cref{subsec:latency_throughput}).
+
+\paragraph{Tokenization and cost model.} We estimate tokens using a provider-aligned tokenizer where possible and a consistent fallback otherwise. Cost per call is computed as
+\begin{equation*}
+	ext{cost\_usd} = \frac{\text{tokens\_in}}{1000} \cdot p_{\text{in}} + \frac{\text{tokens\_out}}{1000} \cdot p_{\text{out}},
+\end{equation*}
+with $p_{\text{in}}$ and $p_{\text{out}}$ set to the posted unit prices (USD/1k tokens) for the evaluated model at the time of execution (\cref{subsec:cost}). Costs are aggregated per model and normalized where required for cross-model comparisons.
+
+\paragraph{Success criteria and exclusions.} Calls are marked successful on receipt of a 2xx status and a non-empty \verb|response_text|. Non-2xx responses are recorded with standardized codes and included in reliability tallies (\cref{subsec:reliability_availability}). Models lacking installed client libraries are skipped with an explicit \verb|dependency_missing| code; deprecated model IDs emit warnings at startup and are excluded unless explicitly enabled.
+
+\paragraph{Logging and observability.} The harness emits structured JSON logs to file and console with per-call summaries (latency, tokens, cost, status) and per-run summaries (success rate, mean/median latency, tail latency, token totals). Logging levels are configurable to reduce overhead during large runs. These diagnostic artifacts enable root-cause analysis for outliers identified in \cref{sec:results}.
+
+\paragraph{Error taxonomy.} Errors are categorized into transport (network/DNS), authentication (invalid or missing keys), policy (rate limits, quota exceeded), and provider (5xx) classes. Each class triggers a specific mitigation (retry/backoff, skip model, cooldown) to avoid biasing metrics while preserving comparability.
+
+\subsubsection{Execution Modes and Controls}
+\label{subsubsec:execution_modes}
+
+The harness exposes CLI flags to tailor runs without code changes: selecting a single model or a category subset; switching system prompts; dry-run validation without API calls; limiting to a range of prompts for quick checks; and adjusting concurrency, rate limits, and timeouts. These controls were used during development to isolate adapter issues and during analysis to replicate subsets for ablations.
+
+\subsubsection{Configuration Validation}
+\label{subsubsec:config_validation}
+
+On startup, the harness validates that (i) model identifiers map to importable adapter functions, (ii) rate limits/timeout values are sensible, (iii) required environment variables are present, and (iv) prompt files conform to the JSON Schema. Failures produce actionable diagnostics and halt execution to prevent partial or biased runs.
+
 \subsubsection{Security \& Privacy Considerations}
 \label{subsubsec:security_privacy}
+
+The harness reads provider credentials from a local \verb|.env| file that is not version-controlled. Logs exclude secrets, and results contain only synthetic prompts and model outputs. No personally identifiable information (PII) is collected; any safety screening is performed on synthetic content. Provider-side data retention remains disabled when the API supports it. These controls align with the safety posture described in \cref{subsec:safety_ethics}.
 
 \subsubsection{Adapter Interface}
 \label{subsubsec:adapter_interface}
 
+All providers conform to a common adapter interface to ensure comparability. Each adapter function accepts a fully resolved prompt bundle—comprising the system prompt, user prompt, and optional template variables—and returns a structured record with: \verb|response_text|, \verb|tokens_in|, \verb|tokens_out|, \verb|latency_ms|, \verb|cost_usd|, \verb|http_status|, and optional \verb|error_code|/\verb|error_message|. Adapters implement provider-specific authentication, parameterization (e.g., temperature), and version tagging, while the harness enforces uniform post-processing. Model availability checks and deprecation warnings are surfaced at startup to avoid silent configuration drift.
+
+An illustrative implementation for the Cohere provider that adheres to the standardized interface is shown below.
+
+\begin{lstlisting}[language=Python,style=mystyle,caption={Cohere adapter implementing the standardized call contract},label={lst:cohere_adapter}]
+import os
+import time
+import cohere
+
+# --- 1. INITIALIZE THE CLIENT ---
+# The API key is loaded from the .env file in main.py.
+# The Cohere client takes the API key as an argument.
+try:
+    api_key = os.getenv("COHERE_API_KEY")
+    if not api_key:
+        raise ValueError("COHERE_API_KEY environment variable not found.")
+    co = cohere.Client(api_key)
+except Exception as e:
+    print(f"Error initializing Cohere client: {e}")
+    co = None
+
+# --- 2. DEFINE PRICING (as of Q4 2025, from your paper's context) ---
+# It's good practice to keep pricing explicit for cost calculations.
+# Replace with the actual pricing for command-r when you run the final benchmark.
+PRICE_PER_1M_INPUT_TOKENS = 0.50  # in USD
+PRICE_PER_1M_OUTPUT_TOKENS = 1.50  # in USD
+
+
+def call_cohere_api(
+    model_name: str, prompt_text: str, system_prompt: str
+) -> dict:
+    """
+    Makes an API call to the specified Cohere model and returns a standardized dictionary.
+    This function adheres to the standardized adapter interface.
+    """
+    if not co:
+        return {
+            "model_version": "N/A",
+            "latency_ms": 0,
+            "tokens_in": 0,
+            "tokens_out": 0,
+            "cost_usd": 0.0,
+            "response_text": "",
+            "error_message": "Cohere client failed to initialize.",
+        }
+
+    try:
+        # --- 3. MAKE THE API CALL ---
+        start_time = time.perf_counter()
+
+        # Cohere uses 'preamble' for the system prompt and 'message' for the user prompt.
+        response = co.chat(
+            model=model_name,
+            preamble=system_prompt,
+            message=prompt_text,
+            temperature=0.3,  # Using the balanced setting from your paper's temp sweep
+        )
+
+        end_time = time.perf_counter()
+        latency_ms = (end_time - start_time) * 1000
+
+        # --- 4. PARSE THE RESPONSE ---
+        response_text = response.text
+        # The meta object contains token usage information
+        tokens_in = 0
+        tokens_out = 0
+        model_version = model_name
+        meta = getattr(response, "meta", None)
+        if meta and getattr(meta, "billed_units", None):
+            tokens_in = getattr(meta.billed_units, "input_tokens", 0)
+            tokens_out = getattr(meta.billed_units, "output_tokens", 0)
+        if meta and getattr(meta, "api_version", None):
+            model_version = getattr(meta.api_version, "version", model_name)
+
+        # --- 5. CALCULATE THE COST ---
+        cost_usd = (tokens_in / 1_000_000 * PRICE_PER_1M_INPUT_TOKENS) + (
+            tokens_out / 1_000_000 * PRICE_PER_1M_OUTPUT_TOKENS
+        )
+
+        # --- 6. RETURN STANDARDIZED DICTIONARY ---
+        return {
+            "model_version": model_version,
+            "latency_ms": latency_ms,
+            "tokens_in": tokens_in,
+            "tokens_out": tokens_out,
+            "cost_usd": cost_usd,
+            "response_text": response_text.strip(),
+            "error_message": None,
+        }
+
+    except Exception as e:
+        # If the API call fails, return a dictionary with the error message
+        return {
+            "model_version": model_name,
+            "latency_ms": 0,
+            "tokens_in": 0,
+            "tokens_out": 0,
+            "cost_usd": 0.0,
+            "response_text": "",
+            "error_message": str(e),
+        }
+\end{lstlisting}
+
+\subsubsection{Data Schema and Persistence}
+\label{subsubsec:data_persistence}
+
+Each run produces a timestamped CSV in \verb|results/raw_output| with columns summarized in \cref{app:csv_schema}. In parallel, results are stored in a SQLite database with normalized tables for prompts, runs, and responses (\cref{app:sqlite_schema}), enabling efficient queries (e.g., per-category latency CDFs, failure modes by provider). This dual-format approach supports both reproducible archiving and rapid analysis.
+
+\paragraph{Derived features.} During ingestion, we compute secondary features including response length (characters/tokens), interrogative-to-declarative ratio (a proxy for Socratic style), and keyword coverage. These features support automated analysis and stratified sampling for human review in \cref{subsec:human_evaluation}.
+
+\paragraph{Reproducibility metadata.} Each run records the Python version, dependency hashes, adapter versions, model identifiers, price tables used for cost computation, and the random seed. This metadata is included in report headers to contextualize results and to facilitate exact re-runs.
+
 \subsection{Human Evaluation Pipeline}
 \label{subsec:human_evaluation}
+
+In addition to automated metrics, we conduct human scoring on a sampled subset of runs to quantify \cref{subsec:pedagogical_quality} and to corroborate \cref{subsec:contextual_adaptability}. The pipeline exports response corpora with anonymized metadata and randomly samples per-model, per-category items for double-rating.
 
 \subsubsection{Evaluation Interface}
 \label{subsubsec:evaluation_interface}
 
+Raters assess de-identified transcripts using a rubric-aligned form that captures question orientation, scaffolding depth, contextual fidelity, and clarity. The interface enforces blinded, independent scoring and records free-text rationales to aid adjudication.
+
+Rater training consisted of a calibration session using exemplar transcripts spanning the score range for each rubric dimension. Calibration continued until inter-rater agreement exceeded a pre-specified threshold, after which periodic spot-checks minimized drift. Any detected drift triggered re-calibration with updated exemplars.
+
 \subsubsection{Evaluation Protocol}
 \label{subsubsec:evaluation_protocol}
 
+Each sampled response is scored by at least two trained evaluators. Disagreements exceeding a pre-specified threshold trigger adjudication and consensus. We compute mean scores per item and inter-rater agreement statistics, and then aggregate per model. The resulting human metrics are merged with automated indicators (e.g., interrogative ratio) to produce the composite measures reported in \cref{subsec:pedagogical_quality}.
+
+Sampling balances prompts across categories and models to maintain comparability, with a minimum number of items per stratum. The sampling seed and item indices are logged for replication. To reduce anchoring effects, raters review de-identified, shuffled transcripts with no model labels or cost/performance metadata.
+
 \subsubsection{Data Collection}
 \label{subsubsec:data_collection}
+
+The harness persists raw outputs to timestamped CSV files (\verb|results/raw_output|) and to a SQLite database with schema fields for prompts, model configuration, telemetry, and derived metrics. This dual storage supports both reproducible archiving and efficient analysis. A lightweight Flask web interface renders dashboards for success rates, latency distributions, response length, and cost summaries. For formal reporting, analysis scripts generate PDF/HTML reports with tables, statistical comparisons, and visualizations. These artifacts are used throughout \cref{sec:results,sec:statistical_analysis,sec:decision} and support replication as detailed in \cref{sec:reproducibility_guide}.
+
+\paragraph{Provenance and sources.} All results in this paper are derived from these harness-generated artifacts and the associated human-scoring exports described in \cref{subsubsec:evaluation_interface,subsubsec:evaluation_protocol}. No external human data (e.g., classroom transcripts) were used; all prompts are synthetic and curated for this study (\cref{subsec:datasets_prompt_bank}). Each human rating is keyed back to the originating harness record via the stable identifiers (e.g., \verb|prompt_id|, model, run timestamp), ensuring a verifiable chain from prompt to score.
+
+\paragraph{Web dashboard.} The dashboard provides: (i) a run index with filters (model, date, category), (ii) latency and cost distribution plots with interactive tooltips, (iii) success/failure heatmaps by error class, and (iv) side-by-side response viewers for qualitative inspection. These tools accelerate exploratory analysis and error triage prior to formal reporting.
+
+\subsection{Analysis, Reporting, and CI/CD}
+\label{subsec:analysis_reporting}
+
+We analyze outputs using a set of scripted workflows. Statistical comparisons (e.g., ANOVA and pairwise tests) and effect sizes are computed as specified in \cref{sec:statistical_analysis}. Visualizations summarize latency distributions, cost vs. quality trade-offs, and success rates. An \textit{LLM-as-judge} module optionally scores response quality to complement human ratings; its outputs are treated as auxiliary evidence and reported with uncertainty intervals.
+
+The repository includes automated checks (formatting, tests) and continuous integration that validate configuration files and run unit tests on adapters. Environment reproducibility is supported by a pinned dependency set and explicit Python version, while model and API versions are recorded per-run to contextualize results in \cref{sec:results}.
+
+Automated report generation produces both HTML and PDF outputs containing executive summaries, model comparison tables, and key plots. Where applicable, we report confidence intervals and conduct multiple-comparison corrections as described in \cref{sec:statistical_analysis}. All figures are programmatically regenerated from the stored CSV/SQLite sources to eliminate manual copy errors.
+
+\subsection{Threats to Validity and Limitations}
+\label{subsec:threats_limitations}
+
+We mitigate internal validity threats by seeding randomization, validating inputs, and standardizing error handling. Nevertheless, provider-side variability (dynamic load, silent model updates) can influence latency and output characteristics. External validity is bounded by our prompt bank: while it reflects target use cases in Mettle, different curricula or domains may yield different relative performance profiles. Cost estimates depend on posted prices at run time and may change over time; we therefore log price metadata alongside results (\cref{subsec:cost}). Finally, \cref{subsec:pedagogical_quality} relies on human judgments; we report inter-rater agreement and adjudication procedures to enhance reliability.
+
+A further limitation is that concurrency tuning, while symmetric across providers, cannot fully equalize unobserved provider-side queuing strategies, which may affect tail latency. Additionally, tokenization differences across providers introduce small uncertainties in cross-model token counts; our use of provider-aligned tokenizers and consistent fallbacks reduces but does not eliminate this effect. Future replications should document any material changes in provider policies, pricing, or model versions to maintain longitudinal comparability.

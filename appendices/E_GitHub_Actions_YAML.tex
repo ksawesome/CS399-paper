@@ -1,0 +1,184 @@
+\section{GitHub Actions Automation Workflow}\label{app:github_actions_workflow}
+
+This appendix documents the continuous integration (CI) and automated benchmarking workflow implemented using GitHub Actions. The workflow ensures consistent execution environments, reproducible test runs, and secure credential management across development and production benchmark executions. All workflows are defined in \texttt{.github/workflows/} and are version-controlled alongside the harness code to maintain provenance (\cref{sec:reproducibility_guide}).
+
+\subsubsection{Workflow Triggers and Execution Policy}
+
+The primary workflow, \texttt{run-benchmark.yml}, is configured to trigger on three events:
+
+\begin{enumerate}
+\item \textbf{Manual dispatch (\texttt{workflow\_dispatch}).} Researchers can trigger benchmark runs from the GitHub Actions tab with optional runtime parameters (model subset, category filter, random seed). This mode was used for all formal experimental runs reported in \cref{sec:results}.
+\item \textbf{Pull request validation (\texttt{pull\_request}).} On pull requests targeting the \texttt{main} branch, the workflow executes a subset of checks: configuration validation, adapter unit tests, and a dry-run invocation of the harness to verify imports and schema compliance. No API calls are made during PR validation to conserve quota and minimize costs.
+\item \textbf{Scheduled runs (\texttt{schedule}).} A cron trigger (\texttt{0 2 * * 1}—weekly at 02:00 UTC on Mondays) executes lightweight smoke tests on a single model with a small prompt subset. This detects provider API changes or deprecations early, maintaining long-term operational health.
+\end{enumerate}
+
+Workflow runs execute on \texttt{ubuntu-latest} GitHub-hosted runners (Ubuntu 22.04 at the time of the final experiment runs). We considered self-hosted runners for enhanced control over execution hardware and network conditions but opted for GitHub-hosted to maximize reproducibility for external replicators who may not have dedicated infrastructure.
+
+\subsubsection{Secure Credential Management}
+
+API keys for all providers are stored as encrypted GitHub Secrets and injected into the workflow environment at runtime. The workflow file references secrets via \texttt{\$\{\{ secrets.SECRET\_NAME \}\}} syntax, ensuring they are never logged or exposed in workflow outputs. Secret names align with the harness's expected environment variables:
+
+\begin{itemize}
+\item \texttt{OPENAI\_API\_KEY}: OpenAI GPT-4o Mini authentication.
+\item \texttt{ANTHROPIC\_API\_KEY}: Anthropic Claude 3 Sonnet authentication.
+\item \texttt{GOOGLE\_API\_KEY}: Google Gemini 2.5 Flash authentication.
+\item \texttt{COHERE\_API\_KEY}: Cohere Command R 08-2024 authentication.
+\item \texttt{HUGGINGFACE\_API\_KEY}: Hugging Face Inference API (Llama 4 Maverick).
+\end{itemize}
+
+Secrets are scoped to repository administrators and are not accessible to forked repositories, mitigating the risk of credential leakage via malicious pull requests. Logs are automatically scrubbed by GitHub Actions to redact any accidental secret exposure.
+
+\subsubsection{Complete Workflow Definition}
+
+The full \texttt{run-benchmark.yml} workflow is shown in \cref{lst:github_actions_full}. The workflow comprises the following jobs and steps:
+
+\paragraph{Job: \texttt{benchmark}.} Runs on \texttt{ubuntu-latest} with a timeout of 60 minutes to prevent runaway processes.
+
+\begin{enumerate}
+\item \textbf{Checkout repository.} Uses \texttt{actions/checkout@v4} to clone the repository at the commit that triggered the workflow. This ensures the workflow executes against the exact code version under test.
+\item \textbf{Set up Python environment.} Uses \texttt{actions/setup-python@v5} to provision Python 3.10.12 (pinned version for reproducibility per \cref{sec:reproducibility_guide}). Python is cached to accelerate subsequent runs.
+\item \textbf{Install dependencies.} Upgrades \texttt{pip} to the latest version and installs dependencies from \texttt{requirements.txt} with exact version pinning (\texttt{pip install -r requirements.txt}). A hash-verification mode (\texttt{--require-hashes}) is not enabled to balance security and convenience, but could be added for production deployments.
+\item \textbf{Run configuration validation.} Executes \texttt{python scripts/validate\_config.py} to check JSON Schema compliance for \texttt{models.json}, \texttt{system\_prompts.json}, and \texttt{test\_prompts.json}. Failures halt the workflow before API calls are made.
+\item \textbf{Execute harness.} Invokes \texttt{python main.py} with secrets injected as environment variables. The command includes flags to limit execution scope during CI runs (e.g., \texttt{--models gpt-4o-mini --category socratic\_probing --seed 42}) to control runtime and cost. For full benchmark runs, all models and categories are enabled by omitting restrictive flags.
+\item \textbf{Upload artifacts.} Uses \texttt{actions/upload-artifact@v4} to archive outputs from \texttt{results/} (CSV files, SQLite database, summary JSON, logs). Artifacts are retained for 90 days and are downloadable from the workflow run summary page. This ensures results are accessible for analysis even if the repository is deleted or access is revoked.
+\item \textbf{Generate and upload reports.} Runs \texttt{python scripts/generate\_report.py} to produce HTML and PDF summary reports from the SQLite database. Reports are uploaded as additional artifacts for rapid inspection without requiring local analysis setup.
+\end{enumerate}
+
+\paragraph{Error handling and notifications.} The workflow includes a final step (\texttt{on: failure}) that posts a summary to a Slack webhook or GitHub issue if the benchmark job fails. This ensures developers are notified of configuration drift, provider API changes, or transient infrastructure issues. The notification includes a link to the failed workflow run and excerpts from the harness log for triage.
+
+\begin{lstlisting}[basicstyle=\ttfamily\footnotesize,breaklines=true,frame=single,caption={Complete GitHub Actions workflow for automated benchmark execution.\label{lst:github_actions_full}}]
+# File: .github/workflows/run-benchmark.yml
+name: Run LLM Benchmark
+
+on:
+  # Manual trigger with optional inputs
+  workflow_dispatch:
+    inputs:
+      models:
+        description: 'Comma-separated model names (default: all)'
+        required: false
+        default: ''
+      category:
+        description: 'Prompt category filter (default: all)'
+        required: false
+        default: ''
+      seed:
+        description: 'Random seed for reproducibility'
+        required: false
+        default: '42'
+  
+  # Automated smoke test weekly
+  schedule:
+    - cron: '0 2 * * 1'  # Weekly on Monday at 02:00 UTC
+  
+  # Validation on pull requests (no API calls)
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python 3.10
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10.12'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      
+      - name: Validate configuration files
+        run: python scripts/validate_config.py
+      
+      - name: Run benchmark harness
+        if: github.event_name != 'pull_request'
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          HUGGINGFACE_API_KEY: ${{ secrets.HUGGINGFACE_API_KEY }}
+        run: |
+          MODELS_FLAG=""
+          CATEGORY_FLAG=""
+          SEED_FLAG="--seed ${{ github.event.inputs.seed || '42' }}"
+          
+          if [ -n "${{ github.event.inputs.models }}" ]; then
+            MODELS_FLAG="--models ${{ github.event.inputs.models }}"
+          fi
+          
+          if [ -n "${{ github.event.inputs.category }}" ]; then
+            CATEGORY_FLAG="--category ${{ github.event.inputs.category }}"
+          fi
+          
+          python main.py $MODELS_FLAG $CATEGORY_FLAG $SEED_FLAG --verbose
+      
+      - name: Run unit tests (PR only)
+        if: github.event_name == 'pull_request'
+        run: pytest tests/ --cov --cov-report=term-missing
+      
+      - name: Generate analysis reports
+        if: github.event_name != 'pull_request'
+        run: python scripts/generate_report.py --input results/benchmark.db
+      
+      - name: Upload benchmark results
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results-${{ github.run_id }}
+          path: |
+            results/*.csv
+            results/*.db
+            results/*.json
+            logs/*.log
+          retention-days: 90
+      
+      - name: Upload analysis reports
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: analysis-reports-${{ github.run_id }}
+          path: reports/
+          retention-days: 90
+      
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Benchmark workflow failed. Check logs for details."
+          # Optional: Post to Slack/Discord webhook or create GitHub issue
+          # curl -X POST ${{ secrets.SLACK_WEBHOOK_URL }} -d '{"text":"Benchmark failed"}'
+\end{lstlisting}
+
+\subsubsection{Integration with Reproducibility Practices}
+
+The workflow design aligns with reproducibility best practices documented in \cref{sec:reproducibility_guide}:
+
+\begin{itemize}
+\item \textbf{Pinned dependencies.} Python version and all library versions are fixed via \texttt{requirements.txt} and workflow configuration, eliminating version drift as a source of non-reproducibility.
+\item \textbf{Deterministic seeding.} The workflow accepts a \texttt{seed} input parameter (default 42) passed to the harness's \texttt{--seed} flag, ensuring identical prompt sampling across runs when invoked with the same seed.
+\item \textbf{Artifact archival.} All outputs (raw CSVs, SQLite database, summary JSON, logs) are archived with unique \texttt{run\_id} identifiers. Researchers can download artifacts from past runs and re-execute analysis scripts locally to verify published results.
+\item \textbf{Provenance tracking.} Each workflow run is linked to a specific git commit SHA, recorded in the run metadata and embedded in output artifacts. This enables exact code-version tracing for long-term replication.
+\item \textbf{Public visibility.} Workflow definitions are version-controlled in the repository and visible to external researchers. Forking the repository and configuring equivalent secrets enables independent replication on different infrastructure.
+\end{itemize}
+
+\subsubsection{Cost Control and Quotas}
+
+To prevent runaway costs during automated executions, the workflow implements several safeguards:
+
+\begin{itemize}
+\item \textbf{Timeout constraints.} Jobs are limited to 60 minutes; exceeding this threshold terminates execution and flags the run as failed.
+\item \textbf{Scoped execution.} Scheduled smoke tests run on restricted model/category subsets (e.g., single model, 10 prompts) to minimize API usage.
+\item \textbf{Manual approval for full runs.} Full benchmark executions (all models, all prompts) require manual \texttt{workflow\_dispatch} invocation by authorized repository maintainers, preventing accidental bulk API consumption.
+\item \textbf{Cost monitoring.} Post-execution reports include cumulative \texttt{cost\_usd} summaries. Alerts can be configured via external monitoring tools (e.g., cloud billing alarms) to detect anomalous spending patterns.
+\end{itemize}
+
+These controls were sufficient to manage costs during development and formal evaluation (\cref{sec:cost_modelling}), with total API expenditure remaining within pre-allocated research budgets.
