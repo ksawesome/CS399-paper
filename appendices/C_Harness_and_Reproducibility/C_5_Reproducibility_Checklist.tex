@@ -121,12 +121,12 @@ GPT-4o Mini & 0.15 & 0.60 & \texttt{openai.com/pricing} \\
 Claude 3 Sonnet & 3.00 & 15.00 & \texttt{anthropic.com/pricing} \\
 Gemini 2.5 Flash & 0.075 & 0.30 & \texttt{ai.google.dev/pricing} \\
 Command R 08-2024 & 0.50 & 1.50 & \texttt{cohere.com/pricing} \\
-Llama 4 Maverick & 0.20 & 0.20 & Hugging Face Inference (converted from per-second billing; see \cref{subsec:total_cost_formula}) \\
+Llama 4 Maverick & 23.50 & 23.50 & Hugging Face Inference (converted from per-second billing; see \cref{subsec:total_cost_formula}) \\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-\paragraph{Llama pricing conversion.} Hugging Face Inference API bills Llama 4 Maverick by inference-second rather than per-token. To enable consistent cross-model cost comparisons in \cref{sec:cost_modelling,sec:results}, we converted the per-second rate (\$0.0001 per inference-second on the serverless tier) to an equivalent per-million-token price using the observed median latency (706 ms) and token counts (180 tokens combined) from our benchmark runs. The resulting \$0.20/1M tokens (input and output) reflects the effective cost for our observed usage pattern and enables apples-to-apples comparisons with token-priced models. See \cref{subsec:total_cost_formula} for the detailed conversion methodology.
+\paragraph{Llama pricing conversion.} Hugging Face Inference API bills Llama 4 Maverick by inference-second rather than per-token. To enable consistent cross-model cost comparisons in \cref{sec:cost_modelling,sec:results}, we converted the per-second rate (\$0.012 per inference-second) to an equivalent per-million-token price using the observed median latency (706 ms) and token counts (180 tokens combined) from our benchmark runs. The calculation yields \$47 per million tokens combined, which apportions to \$23.50/1M tokens for input and \$23.50/1M tokens for output. This pricing reflects the effective cost for our observed usage pattern and enables apples-to-apples comparisons with token-priced models. See \cref{subsec:total_cost_formula} for the detailed conversion methodology.
 
 \paragraph{Pricing stability and future adjustments.} Providers may revise pricing over time. For longitudinal comparisons or cost-sensitivity analyses, researchers should adjust costs using updated rate tables and document the revision date. The harness logs the active price table with each run (\texttt{run\_id} metadata in SQLite; see \cref{app:sqlite_schema}), enabling retrospective cost recalculation without rerunning API calls.
 

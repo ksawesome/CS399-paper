@@ -25,7 +25,7 @@ GPT-4o mini & \$0.150 & \$0.600 & 128,000 tokens \\
 Claude 3 Sonnet & \$3.000 & \$15.000 & 200,000 tokens \\
 Gemini 2.5 Flash & \$0.075 & \$0.300 & 128,000 tokens \\
 Command R 08-2024 & \$0.500 & \$1.500 & 128,000 tokens \\
-Llama 4 Maverick & \$0.200 & \$0.200 & 128,000 tokens \\ \bottomrule
+Llama 4 Maverick & \$23.50 & \$23.50 & 128,000 tokens \\ \bottomrule
 \end{tabularx}
 \end{table}
 
@@ -33,11 +33,11 @@ Llama 4 Maverick & \$0.200 & \$0.200 & 128,000 tokens \\ \bottomrule
 
 \paragraph{Llama 4 Maverick pricing conversion.} Hugging Face Inference API bills Llama 4 Maverick by inference-second rather than per-token, presenting a challenge for direct cost comparison with token-priced models. To enable consistent cross-model analysis, we converted the per-second billing to an equivalent per-million-token rate using empirical data from our benchmark runs. Specifically, we computed the median latency ($\bar{L}_{\text{Llama}} = 706$\,ms; see \cref{tab:summary_scores}) and median token counts ($\bar{T}_{\text{in}} = 84$ tokens input, $\bar{T}_{\text{out}} = 96$ tokens output) observed across our 120-prompt corpus. 
 
-The conversion proceeds as follows: Hugging Face publishes a rate of approximately \$0.0001 per inference-second for Llama 4 Maverick 17B on their serverless inference tier. With a median latency of 0.706 seconds, this translates to an effective cost per interaction of $0.706\,\text{s} \times \$0.0001/\text{s} = \$0.0000706$ per call. Dividing by the median total token count ($84 + 96 = 180$ tokens) and scaling to per-million-token units yields:
+The conversion proceeds as follows: Hugging Face publishes a rate of approximately \$0.012 per inference-second for Llama 4 Maverick 17B. With a median latency of 0.706 seconds, this translates to an effective cost per interaction of $0.706\,\text{s} \times \$0.012/\text{s} = \$0.0085$ per call. Dividing by the median total token count ($84 + 96 = 180$ tokens) and scaling to per-million-token units yields:
 \[
-\frac{\$0.0000706}{180\,\text{tokens}} \times 10^6\,\text{tokens} \approx \$0.39\,\text{per million tokens (combined)}.
+\frac{\$0.0085}{180\,\text{tokens}} \times 10^6\,\text{tokens} \approx \$47\,\text{per million tokens (combined)}.
 \]
-Apportioning symmetrically between input and output (as Hugging Face does not differentiate), this corresponds to approximately \$0.20 per million tokens for input and \$0.20 per million tokens for output. This symmetric \$0.20/\$0.20 pricing reflects our observed usage pattern and enables apples-to-apples comparison in \cref{tab:summary_scores,sec:results}. Alternative usage profiles (longer prompts, different latency distributions) would yield different effective rates; for deployments with substantially different token profiles, recalculate using \cref{eq:per_call_cost} with actual per-second charges.
+Apportioning symmetrically between input and output (as Hugging Face does not differentiate), this corresponds to approximately \$23.50 per million tokens for input and \$23.50 per million tokens for output. This symmetric \$23.50/\$23.50 pricing reflects our observed usage pattern and enables apples-to-apples comparison in \cref{tab:summary_scores,sec:results}. Alternative usage profiles (longer prompts, different latency distributions) would yield different effective rates; for deployments with substantially different token profiles, recalculate using \cref{eq:per_call_cost} with actual per-second charges.
 
 We report costs at multiple granularities: per-call, per-prompt category, and per-model totals. For comparisons across models, we also provide cost per 1{,}000 interactions as a deployment-normalized metric (\cref{subsubsec:cost_units}). Uncertainty is summarized by bootstrap confidence intervals over calls (\cref{subsec:confidence_intervals}).
 
