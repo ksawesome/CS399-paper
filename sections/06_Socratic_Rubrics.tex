@@ -69,7 +69,7 @@ Together, these practices provide a complete provenance chain from prompt specif
 
 \subsection{Sampling, Blinding, and Reliability}\label{subsec:sampling_blinding}
 
-From each model's corpus we sample a balanced subset stratified by prompt category (\cref{subsec:datasets_prompt_bank}), ensuring a minimum per stratum. Sampling uses a fixed seed recorded with the run metadata (\cref{subsubsec:data_persistence}). Raters receive de-identified, shuffled transcripts with no model or cost labels (\cref{subsubsec:evaluation_interface}). We compute IRR statistics per dimension and overall; if IRR falls below the target band ($\kappa<0.6$ or ICC$<0.7$), we pause and re-calibrate (\cref{subsubsec:evaluation_protocol}).
+From each model's corpus we sample a balanced subset stratified by prompt category (\cref{subsec:datasets_prompt_bank}), ensuring a minimum per stratum. Sampling uses a fixed seed recorded with the run metadata (\cref{subsubsec:data_persistence}). Raters receive de-identified, shuffled transcripts with no model or cost labels (\cref{subsubsec:evaluation_interface}). We compute IRR statistics per dimension and overall; if IRR falls below the target band ($\kappa<0.4$ or ICC$<0.7$), we pause and re-calibrate (\cref{subsubsec:evaluation_protocol}).
 
 \subsection{Aggregation \& Weighting}\label{subsec:aggregation_weighting}
 
