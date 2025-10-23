@@ -53,7 +53,7 @@ Contextual adaptability was assessed using a combination of automated checks and
 
 \begin{enumerate}
     \item \textbf{Automated Keyword Check:} Each response was programmatically scanned for the presence of the key contextual elements, producing a binary pass/fail score for inclusion.
-    \item \textbf{Human Fidelity Score:} Trained evaluators rated each response on a five-point scale, assessing how accurately and appropriately the context was applied (see \cref{subsec:contextual_adaptability}). This measured both the inclusion of context and its correct usage.
+    \item \textbf{Human Fidelity Score:} Trained evaluators rated each response on a five-point scale, assessing how accurately and appropriately the context was applied (see \cref{sec:scoring_rubrics} and \cref{app:context_fidelity_rubric}). This measured both the inclusion of context and its correct usage.
     \item \textbf{Hallucination Rate:} Automated checks flagged responses that introduced numerical values or concepts not present in the prompt or the provided context.
 \end{enumerate}
 
@@ -90,7 +90,7 @@ Cost was defined as the direct financial expense incurred to use a model's API f
 
 \subsubsection{Measurement}
 \label{subsubsec:cost_measurement}
-Cost was measured programmatically for every model interaction. The benchmarking harness logged the exact number of \verb|tokens_in| (input prompt) and \verb|tokens_out| (model response) for each API call. Token usage was then multiplied by the model-specific price per token for both input and output. The total cost for each model was computed as the sum of these individual transaction costs across the entire prompt set. This approach ensured precise, reproducible cost calculations (see \cref{sec:evaluation_criteria} for context on the benchmark prompts).
+Cost was measured programmatically for every model interaction. The benchmarking harness logged the exact number of \verb|tokens_in| (input prompt) and \verb|tokens_out| (model response) for each API call. Token usage was then multiplied by the model-specific price per token for both input and output. The total cost for each model was computed as the sum of these individual transaction costs across the entire prompt set. This approach ensured precise, reproducible cost calculations (see \cref{sec:candidate_models} and \cref{app:prompt_bank}).
 
 \subsubsection{Units}
 \label{subsubsec:cost_units}
