@@ -294,7 +294,7 @@ The harness persists raw outputs to timestamped CSV files (\verb|results/raw_out
 \subsection{Analysis, Reporting, and CI/CD}
 \label{subsec:analysis_reporting}
 
-We analyze outputs using a set of scripted workflows. Statistical comparisons (e.g., ANOVA and pairwise tests) and effect sizes are computed as specified in \cref{sec:statistical_analysis}. Visualizations summarize latency distributions, cost vs. quality trade-offs, and success rates. An \textit{LLM-as-judge} module optionally scores response quality to complement human ratings; its outputs are treated as auxiliary evidence and reported with uncertainty intervals.
+We analyze outputs using a set of scripted workflows. Statistical comparisons (e.g., pairwise tests) and effect sizes are computed as specified in \cref{sec:statistical_analysis}. Visualizations summarize latency distributions, cost vs. quality trade-offs, and success rates. An \textit{LLM-as-judge} module optionally scores response quality to complement human ratings; its outputs are treated as auxiliary evidence and reported with uncertainty intervals.
 
 The repository includes automated checks (formatting, tests) and continuous integration that validate configuration files and run unit tests on adapters. Environment reproducibility is supported by a pinned dependency set and explicit Python version, while model and API versions are recorded per-run to contextualize results in \cref{sec:results}.
 
