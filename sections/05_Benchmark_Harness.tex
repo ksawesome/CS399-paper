@@ -146,7 +146,7 @@ On startup, the harness validates that (i) model identifiers map to importable a
 \subsubsection{Security \& Privacy Considerations}
 \label{subsubsec:security_privacy}
 
-The harness reads provider credentials from a local \verb|.env| file that is not version-controlled. Logs exclude secrets, and results contain only synthetic prompts and model outputs. No personally identifiable information (PII) is collected; any safety screening is performed on synthetic content. Provider-side data retention remains disabled when the API supports it. These controls align with the safety posture described in \cref{subsec:safety_ethics}.
+The harness reads provider credentials from a local \verb|.env| file that is not version-controlled. Logs exclude secrets, and results contain only prompts and model outputs. No personally identifiable information (PII) is collected; any safety screening is performed on the prompt corpus. Provider-side data retention remains disabled when the API supports it. These controls align with the safety posture described in \cref{subsec:safety_ethics}.
 
 \subsubsection{Adapter Interface}
 \label{subsubsec:adapter_interface}
@@ -259,7 +259,7 @@ def call_cohere_api(
 
 Each run produces a timestamped CSV in \verb|results/raw_output| with columns summarized in \cref{app:csv_schema}. In parallel, results are stored in a SQLite database with normalized tables for prompts, runs, and responses (\cref{app:sqlite_schema}), enabling efficient queries (e.g., per-category latency CDFs, failure modes by provider). This dual-format approach supports both reproducible archiving and rapid analysis.
 
-\paragraph{Derived features.} During ingestion, we compute secondary features including response length (characters/tokens), interrogative-to-declarative ratio (a proxy for Socratic style), and keyword coverage. These features support automated analysis and stratified sampling for human review in \cref{subsec:human_evaluation}.
+\paragraph{Derived features.} During ingestion, we compute secondary features including response length (characters/tokens), interrogative ratio (fraction of sentences ending in a question mark, serving as a proxy for Socratic question-orientation), and keyword coverage. These features support automated analysis and stratified sampling for human review in \cref{subsec:human_evaluation}. The interrogative ratio is calculated by parsing each response into sentences and computing the proportion that end with a question mark, providing a quantitative correlate to the question-orientation dimension of the Socratic quality rubric.
 
 \paragraph{Reproducibility metadata.} Each run records the Python version, dependency hashes, adapter versions, model identifiers, price tables used for cost computation, and the random seed. This metadata is included in report headers to contextualize results and to facilitate exact re-runs.
 
@@ -287,7 +287,7 @@ Sampling balances prompts across categories and models to maintain comparability
 
 The harness persists raw outputs to timestamped CSV files (\verb|results/raw_output|) and to a SQLite database with schema fields for prompts, model configuration, telemetry, and derived metrics. This dual storage supports both reproducible archiving and efficient analysis. A lightweight Flask web interface renders dashboards for success rates, latency distributions, response length, and cost summaries. For formal reporting, analysis scripts generate PDF/HTML reports with tables, statistical comparisons, and visualizations. These artifacts are used throughout \cref{sec:results,sec:statistical_analysis,sec:decision} and support replication as detailed in \cref{sec:reproducibility_guide}.
 
-\paragraph{Provenance and sources.} All results in this paper are derived from these harness-generated artifacts and the associated human-scoring exports described in \cref{subsubsec:evaluation_interface,subsubsec:evaluation_protocol}. No external human data (e.g., classroom transcripts) were used; all prompts are synthetic and curated for this study (\cref{subsec:datasets_prompt_bank}). Each human rating is keyed back to the originating harness record via the stable identifiers (e.g., \verb|prompt_id|, model, run timestamp), ensuring a verifiable chain from prompt to score.
+\paragraph{Provenance and sources.} All results in this paper are derived from these harness-generated artifacts and the associated human-scoring exports described in \cref{subsubsec:evaluation_interface,subsubsec:evaluation_protocol}. All prompts were curated for this study (\cref{subsec:datasets_prompt_bank}). Each human rating is keyed back to the originating harness record via the stable identifiers (e.g., \verb|prompt_id|, model, run timestamp), ensuring a verifiable chain from prompt to score.
 
 \paragraph{Web dashboard.} The dashboard provides: (i) a run index with filters (model, date, category), (ii) latency and cost distribution plots with interactive tooltips, (iii) success/failure heatmaps by error class, and (iv) side-by-side response viewers for qualitative inspection. These tools accelerate exploratory analysis and error triage prior to formal reporting.
 

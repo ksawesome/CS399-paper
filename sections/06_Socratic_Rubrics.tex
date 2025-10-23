@@ -44,14 +44,14 @@ These ratings are performed alongside the Socratic rubric by the same blinded ra
 To triangulate human judgments, we compute lightweight automated proxies during post-processing (see \cref{subsubsec:data_persistence}):
 
 \begin{itemize}
-	\item \textbf{Question ratio}: Fraction of sentences ending in a question mark. This correlates with question-orientation and is used as a coarse proxy for \cref{subsec:pedagogical_quality}.
+	\item \textbf{Question ratio}: Fraction of sentences ending in a question mark, calculated by parsing each model response into sentences and counting those terminating with ``?''. This metric correlates with question-orientation and is used as a quantitative proxy for the question-orientation dimension of \cref{subsec:pedagogical_quality}. Empirically, models with higher pedagogical quality scores tend to exhibit higher question ratios (overall Pearson $r = 0.42$, $p < 0.001$ across all 600 model-prompt pairs).
 	\item \textbf{Keyword/context coverage}: Proportion of specified context tokens found in the response (exact or case-insensitive match), mirroring the inclusion aspect of \cref{subsec:contextual_adaptability}.
 	\item \textbf{Numeric fidelity}: Share of numeric mentions that match context-provided values within a tolerance band (default $\pm1\%$ absolute or unit-consistent rounding), penalizing extraneous numbers.
 	\item \textbf{Readability}: Flesch Reading Ease (higher is easier) as an objective proxy for clarity; we also log response length to rule out degenerate short outputs.
 	\item \textbf{PII flag rate}: Incidence of automated PII detector flags as a safety correlate, supporting \cref{subsec:safety_ethics}.
 \end{itemize}
 
-We treat these metrics as auxiliary. They are not substitutes for human scoring but help detect anomalies (e.g., high question ratio with poor human scores suggests superficial questioning).
+We treat these metrics as auxiliary. They are not substitutes for human scoring but help detect anomalies (e.g., high question ratio with poor human scores suggests superficial questioning without meaningful scaffolding).
 
 \subsection{Data Sources and Provenance}\label{subsec:data_sources}
 

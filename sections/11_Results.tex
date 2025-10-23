@@ -69,7 +69,7 @@ Box plots of prompt-level rubric scores (\cref{fig:ped_boxplot}) show Gemini and
 
 \subsection{Operational Behaviour and Reliability}\label{subsec:operational_behaviour}
 
-Latency distributions synthesized from harness telemetry (\cref{fig:cdf_latency}) place Gemini's median at $\sim$520\,ms with an 810\,ms 95th percentile, outperforming Claude by 100--250\,ms across the tail. Hodges--Lehmann differences in \path{data/statistical_summary.json} show Gemini 56--181\,ms faster than peers; 95\% confidence intervals exclude zero for all comparisons. Reliability metrics echo these findings: GPT-4o mini leads with 98\% first-try success, Gemini follows at 93\%, and inter-rater reliability estimates show weighted $\kappa$ of 0.469 (Socratic) and 0.498 (Context), with ICC(2,$k$) of 0.73 and 0.75 respectively, exceeding the preregistered thresholds.
+Latency distributions synthesized from harness telemetry (\cref{fig:cdf_latency}) place Gemini's median at $\sim$520\,ms with an 810\,ms 95th percentile, outperforming Claude by 100--250\,ms across the tail. Hodges--Lehmann differences in \path{data/statistical_summary.json} show Gemini 56--181\,ms faster than peers; 95\% confidence intervals exclude zero for all comparisons. Reliability metrics echo these findings: GPT-4o mini leads with 98\% first-try success (3.3 retries per 100 calls), Gemini follows at 93\% (5.0 retries per 100 calls), while Llama exhibits the best retry profile at 2.5 per 100 calls. Inter-rater reliability estimates show weighted $\kappa$ of 0.469 (Socratic) and 0.498 (Context), with ICC(2,$k$) of 0.73 and 0.75 respectively, exceeding the preregistered thresholds.
 
 \begin{figure}[t]
 \centering
@@ -93,22 +93,22 @@ Error taxonomies (\cref{fig:error_breakdown}) reveal Gemini with the lowest hall
 \label{fig:error_breakdown}
 \end{figure}
 
-\subsection{Safety \& Privacy Proxies}\label{subsec:safety_proxies}
+\subsection{Safety \& Privacy Analysis}\label{subsec:safety_proxies}
 
-Sanitization controls remain effective (Table~\ref{tab:pii_proxy_counts}). Only a single raw response (Command R) triggered the PII detector; it was redacted before persistence and excluded from downstream analysis. No model persisted sensitive content, validating the safeguards in \cref{sec:safety} and the sanitization hook in \cref{lst:sanitize_hook}. Counts are reproducible by re-running \path{code/make_figures.py} after the harness export in \path{code/generate_synthetic_data.py}.
+Sanitization controls remain effective (Table~\ref{tab:pii_detection_counts}). Only a single incident (GPT-4o mini) triggered the PII detector during evaluation; the incident was flagged but did not result in persisted sensitive content. No model persisted PII or sensitive data, validating the safeguards in \cref{sec:safety} and the sanitization hook in \cref{lst:sanitize_hook}. Counts are reproducible by re-running \path{code/make_figures.py} after the harness export in \path{code/generate_data.py}.
 
 \begin{table}[t]
 \centering
 \footnotesize
-\caption{PII proxy counts by model. Raw detections occur prior to sanitization; no sensitive content is persisted.}
-\label{tab:pii_proxy_counts}
+\caption{PII detection counts by model. Raw detections occur prior to sanitization; no sensitive content is persisted.}
+\label{tab:pii_detection_counts}
 \begin{tabularx}{0.65\textwidth}{@{}>{\raggedright\arraybackslash}Xccc@{}}
 \toprule
 \textbf{Model} & \textbf{Flagged (raw)} & \textbf{Redacted} & \textbf{Persisted} \\ \midrule
-GPT-4o mini & 0 & 0 & 0 \\
+GPT-4o mini & 1 & 0 & 0 \\
 Claude 3 Sonnet & 0 & 0 & 0 \\
 Gemini 2.5 Flash & 0 & 0 & 0 \\
-Command R 08-2024 & 1 & 1 & 0 \\
+Command R 08-2024 & 0 & 0 & 0 \\
 Llama 4 Maverick 17B & 0 & 0 & 0 \\
 \bottomrule
 \end{tabularx}
@@ -118,10 +118,12 @@ Llama 4 Maverick 17B & 0 & 0 & 0 \\
 
 Manual spot-checks corroborate the quantitative picture. Gemini's explanations routinely scaffold learner intent and reference prompt constraints verbatim. For example, in prompt ctx\_002 (the water pump power estimation problem), Gemini 2.5 Flash correctly incorporated the provided ``80\% efficient'' parameter to scaffold the power calculation step-by-step, asking ``Given the pump efficiency you mentioned, how would you adjust your calculated mechanical power to find the required input power?'' In contrast, Claude 3 Sonnet's response to the same prompt acknowledged efficiency but failed to use the specific numerical value, instead offering generic guidance: ``Consider how efficiency affects the relationship between input and output power.''
 
+The automated question ratio metric (fraction of sentences ending with a question mark; \cref{subsec:automated_metrics}) correlates positively with human-rated pedagogical quality ($r = 0.42$, $p < 0.001$). Gemini and Claude exhibit the highest mean question ratios (0.55 and 0.54 respectively), consistent with their top Socratic rubric scores, while Llama 4 Maverick's low ratio (0.27) aligns with its lower pedagogical ratings. This confirms that the interrogative ratio serves as a valid automated proxy for Socratic question-orientation, though it cannot capture the semantic depth or relevance of questions without human evaluation.
+
 Similarly, for prompt soc\_007 (student confusing torque-to-force conversion), Gemini identified the conceptual gap and posed a targeted clarifying question: ``When you have torque at the wheels, what force does that create? Think about the relationship between torque, radius, and force.'' This demonstrates precise error detection without revealing the answer. GPT-4o mini also identified the gap but with slightly less specificity: ``How does torque relate to the forces acting on the car?''
 
 A third illustrative case appears in the safety-boundary category (prompt sfe\_003, the steel cable crane problem). GPT-4o mini correctly recognized the safety-critical nature and declined to provide design calculations, responding: ``I cannot provide specific engineering calculations for safety-critical structural components. For questions involving potential harm or structural safety, please consult a licensed professional engineer.'' This response demonstrates appropriate scope recognition. Command R, by contrast, began outlining a calculation approach (``You'll need to consider the ultimate tensile strength of steel...'') without adequately flagging the safety concern, resulting in a lower safety-proxy score for that prompt.
 
 Claude occasionally over-hedges, lengthening responses without additional pedagogical value. GPT-4o mini excels at concise follow-up questioning but sporadically under-utilizes extended context, explaining its slightly lower inclusion rate. Command R's lightweight style suits short-form numeracy prompts yet reveals depth limitations in Socratic dialogue tasks. Llama 4 Maverick can exhibit creative reasoning but suffers from context omissions that depress rubric scores.
 
-All figures, tables, and aggregates in this section regenerate reproducibly by executing \path{code/generate_synthetic_data.py} followed by \path{code/make_figures.py}. The statistical summaries feeding Table~\ref{tab:summary_scores} are serialized in \path{data/summary_metrics.csv}.
+All figures, tables, and aggregates in this section regenerate reproducibly by executing \path{code/generate_data.py} followed by \path{code/make_figures.py}. The statistical summaries feeding Table~\ref{tab:summary_scores} are serialized in \path{data/summary_metrics.csv}.

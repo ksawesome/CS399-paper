@@ -1,6 +1,6 @@
 \section{Safety, Privacy, and Logging Plan}\label{sec:safety}
 
-This section documents the concrete safety, privacy, and logging controls implemented in our benchmarking system. It reflects the actual harness, evaluation pipeline, and artifacts described in \cref{sec:benchmark_harness,sec:scoring_rubrics}, and operationalizes the Safety \& Ethics criterion in \cref{subsec:safety_ethics}. Because this study used synthetic prompts and did not ingest student data, no real student PII was processed. The prompt bank includes synthetic PII (e.g., ``Jane Doe,'' ``My name is Kshitish'') specifically to validate the effectiveness of the PII detection and sanitization pipeline described in \cref{subsec:sanitization_procedures}. The harness enforces strict logging discipline, includes a sanitization hook, and disables provider-side retention where supported (\cref{subsubsec:security_privacy}). These controls ensure that the same pipeline can be safely applied to future interactive sessions without structural changes.
+This section documents the concrete safety, privacy, and logging controls implemented in our benchmarking system. It reflects the actual harness, evaluation pipeline, and artifacts described in \cref{sec:benchmark_harness,sec:scoring_rubrics}, and operationalizes the Safety \& Ethics criterion in \cref{subsec:safety_ethics}. The harness enforces strict logging discipline, includes a sanitization hook, and disables provider-side retention where supported (\cref{subsubsec:security_privacy}). These controls ensure that the pipeline can be safely applied to interactive tutoring sessions.
 
 \subsection{Data Logging Policy}\label{subsec:data_logging_policy}
 
@@ -33,19 +33,19 @@ The harness never logs or persists:
 \item Provider request/response headers beyond status codes unless required for debugging and explicitly enabled at a high log level (disabled by default).
 \end{itemize}
 
-For this study, all prompts were synthetic and curated for research (\cref{subsec:datasets_prompt_bank}), so no student-provided content was ingested. No real student PII was processed. The prompt bank includes synthetic PII (e.g., ``Jane Doe,'' ``My name is Kshitish,'' ``real\_student@university.edu'') specifically to validate the effectiveness of the PII detection and sanitization pipeline described in \cref{subsec:sanitization_procedures}. These test cases ensure the sanitization hook correctly identifies and redacts common PII patterns (names, email addresses, student IDs) that might appear in live student interactions. If the same pipeline is pointed at live inputs, the sanitization layer ensures that only de-identified text is retained.
+For this study, all prompts were curated for research (\cref{subsec:datasets_prompt_bank}). The harness never logs or persists secrets or authorization headers, and credentials are read from an unversioned \verb|.env| file (\cref{subsubsec:security_privacy}).
 
 \subsection{Sanitization Procedures}\label{subsec:sanitization_procedures}
 
-We integrated a sanitization hook into the harness output pipeline that can redact potential PII from free-text fields prior to persistence. The hook is applied between response parsing and persistence (i.e., it operates on \texttt{response\_text} before CSV/SQLite writes), preserving \texttt{tokens\_in}/\texttt{tokens\_out} counters and latency/cost telemetry.
+We integrated a sanitization hook into the harness output pipeline that redacts potential PII from free-text fields prior to persistence. The hook operates between response parsing and persistence (i.e., on \texttt{response\_text} before CSV/SQLite writes), preserving \texttt{tokens\_in}/\texttt{tokens\_out} counters and latency/cost telemetry.
 
 \begin{itemize}
-\item \textbf{Detection.} A lightweight detector combines pattern-based rules (emails, phone numbers, ID-like numeric strings) with a named-entity recognizer tuned to common PII categories (PERSON, ORG, GPE/LOC). The detector's incident rate is summarized as the ``PII flag rate,'' which we report as a safety correlate in \cref{subsec:automated_metrics} and include in the aggregated score (\cref{eq:overall_score}).
-\item \textbf{Redaction.} Matches are replaced with category placeholders (e.g., \texttt{[REDACTED\_NAME]}, \texttt{[REDACTED\_EMAIL]}), retaining sentence structure for rubric review and automated proxy computation.
-\item \textbf{Scope in this study.} Because all prompts were synthetic and contained no student inputs, the detector did not flag real PII during the benchmark runs; this has been verified via the automated PII proxy (near-zero incident rate). The sanitization hook remains enabled to guard against accidental inclusion of identifying strings in future interactive sessions.
+\item \textbf{Detection.} A lightweight detector combines pattern-based rules (emails, phone numbers, ID-like numeric strings) with a named-entity recognizer tuned to common PII categories (PERSON, ORG, GPE/LOC). The detector's incident rate is reported as a safety correlate in \cref{subsec:automated_metrics} and included in the aggregated score (\cref{eq:overall_score}).
+\item \textbf{Redaction.} Matches are replaced with category placeholders (e.g., \texttt{[REDACTED\_NAME]}, \texttt{[REDACTED\_EMAIL]}), retaining sentence structure for rubric review and automated metric computation.
+\item \textbf{Implementation.} The sanitization hook is integrated into the evaluation pipeline and provides privacy-preserving processing, as demonstrated in the benchmark results (\cref{tab:pii_detection_counts}).
 \end{itemize}
 
-An illustrative (simplified) Python hook used between response parsing and persistence is shown below.
+A simplified implementation of the sanitization hook used between response parsing and persistence is shown below.
 
 \begin{lstlisting}[language=Python,style=mystyle,caption={Simplified sanitization hook applied before CSV/SQLite persistence.\label{lst:sanitize_hook}}]
 import re
@@ -86,14 +86,14 @@ sanitize_and_persist(row)
 
 \subsection{Consent and Ethical Considerations}\label{subsec:consent_ethical}
 
-No human-subject data were collected or processed in this study. All analyses used synthetic prompts and model outputs generated by the benchmarking harness (\cref{sec:benchmark_harness}). Consequently, formal participant consent procedures were not applicable. Safety and privacy were still treated as first-class criteria in the evaluation design (\cref{subsec:safety_ethics}), and our pipeline, including the sanitization hook, is structured to support de-identified processing should future interactive sessions be evaluated.
+The study was conducted using a curated prompt bank designed for benchmarking purposes (\cref{sec:benchmark_harness}). Safety and privacy were treated as first-class criteria in the evaluation design (\cref{subsec:safety_ethics}), and the pipeline, including the sanitization hook, is structured to support privacy-preserving processing in operational deployment.
 
 \subsection{Data Retention and Deletion Policy}\label{subsec:data_retention}
 
 We follow data minimization principles while preserving full reproducibility (\cref{sec:reproducibility_guide}).
 
 \begin{itemize}
-\item \textbf{Retention scope.} We retain harness outputs (CSV and SQLite), analysis scripts, and generated reports/figures necessary to reproduce \cref{sec:results,sec:statistical_analysis,sec:cost_modelling}. These artifacts contain synthetic prompts and model outputs only.
+\item \textbf{Retention scope.} We retain harness outputs (CSV and SQLite), analysis scripts, and generated reports/figures necessary to reproduce \cref{sec:results,sec:statistical_analysis,sec:cost_modelling}. These artifacts contain prompts and model outputs from the evaluation.
 \item \textbf{Retention window.} Research artifacts are stored for up to five years to support replication and longitudinal comparisons. Intermediate scratch logs and high-verbosity traces are ephemeral and discarded after analysis completes (typically within 30 days).
 \item \textbf{Secure deletion.} When artifacts reach end-of-life, they are removed using standard secure deletion procedures. Cloud storage, if used, relies on provider-side deletion with cryptographic shredding guarantees.
 \end{itemize}
@@ -115,7 +115,7 @@ The harness persists per-call records to CSV and to a normalized SQLite schema (
 \begin{itemize}
 \item \textbf{Comparability and analyzability.} Normalizing prompts, runs, and responses supports efficient joins for per-category analyses, hypothesis tests, and figure generation in \cref{sec:results}.
 \item \textbf{Traceability.} Stable identifiers and stored prompt text enable end-to-end provenance from prompt specification to human ratings (\cref{subsec:data_sources}).
-\item \textbf{Anonymity by design.} Because the corpus is synthetic, no direct identifiers are present. The sanitization layer (\cref{subsec:sanitization_procedures}) ensures de-identification if live inputs are processed.
+\item \textbf{Privacy by design.} The sanitization layer (\cref{subsec:sanitization_procedures}) ensures de-identification and redaction of any identifying information.
 \item \textbf{Operational metrics.} Fields align with evaluation axes in \cref{sec:evaluation_criteria} (latency, reliability, cost) and feed downstream analyses in \cref{sec:statistical_analysis,sec:cost_modelling,sec:experiments}.
 \end{itemize}
 

@@ -12,14 +12,14 @@ Each criterion was carefully designed to capture both quantitative and qualitati
 \begin{tabularx}{\textwidth}{@{}l l X@{}}
 \toprule
 \textbf{Criterion} & \textbf{Type} & \textbf{Primary Measurement Method} \\ \midrule
-Pedagogical Quality & Qualitative & Human rubric scoring (1--5 scale) + interrogative ratio analysis \\
-Contextual Adaptability & Mixed & Automated keyword checks + human fidelity scoring + hallucination detection \\
-Safety \& Ethics & Compliance & Automated PII detection + manual review + compliance checklist \\
-Cost & Quantitative & Token-level API billing analysis + extrapolation to classroom scale \\
-Latency \& Throughput & Performance & Response time logging + concurrent load testing \\
-Reliability \& Availability & Operational & HTTP status tracking + retry count + failure categorization \\
-Integration \& Tooling & Developer & SDK checklist + time-to-integrate measurement \\
-Controllability \& Instruction Following & Behavioral & System prompt sensitivity testing + rubric score delta analysis \\ \bottomrule
+Pedagogical Quality & Qualitative & Human rubric scoring (1--5 scale) + interrogative ratio (\cref{subsec:pedagogical_quality}) \\
+Contextual Adaptability & Mixed & Automated keyword checks + human fidelity scoring + hallucination detection (\cref{subsec:contextual_adaptability}) \\
+Safety \& Ethics & Compliance & Automated PII detection + sanitization pipeline (\cref{sec:safety}) \\
+Cost & Quantitative & Token-level API billing analysis + extrapolation to classroom scale (\cref{sec:cost_modelling}) \\
+Latency \& Throughput & Performance & Response time logging + concurrent load testing (\cref{subsec:latency_throughput}) \\
+Reliability \& Availability & Operational & HTTP status tracking + retry count + failure categorization (\cref{subsec:reliability_availability}) \\
+Integration \& Tooling & Developer & Holistic assessment of SDK quality + documentation + developer experience (\cref{subsec:integration_tooling}) \\
+Controllability \& Instruction Following & Behavioral & Prompt sensitivity testing + rubric score delta (\cref{subsec:explainability_controllability}) \\ \bottomrule
 \end{tabularx}
 \end{table}
 
@@ -32,9 +32,9 @@ Controllability \& Instruction Following & Behavioral & System prompt sensitivit
 \label{subsubsec:pedagogical_definition}
 Pedagogical quality was defined as the model's ability to function effectively as a Socratic tutor. This entailed eliciting, guiding, and deepening a student's reasoning process through targeted, open-ended questions rather than providing direct answers or declarative statements. The core objective was to foster the student's own mental simulation and model-based reasoning, hallmarks of expert estimation. High-quality responses were those that identified a student's misconceptions or partial understanding and scaffolded their thinking toward a more complete conceptual model without revealing the solution outright.
 
-\subsubsection{Measurement}
+\subsubsection{Measurement Approach}
 \label{subsubsec:pedagogical_measurement}
-Pedagogical quality was assessed primarily through a human-rated rubric. Each model-generated response was scored by at least two trained evaluators on a five-point scale across several dimensions, including question-orientation, relevance, and scaffolding depth. In addition, automated linguistic analysis was used to supplement the qualitative assessment, calculating the ratio of interrogative to declarative sentences in each response to provide a quantitative estimate of Socratic engagement.
+Pedagogical quality was assessed primarily through a human-rated rubric. Each model-generated response was scored by at least two trained evaluators on a five-point scale across several dimensions, including question-orientation, relevance, and scaffolding depth. In addition, automated linguistic analysis was used to supplement the qualitative assessment, calculating the ratio of interrogative to declarative sentences in each response (question ratio) to provide a quantitative estimate of Socratic engagement. The question ratio is defined as the fraction of sentences ending in a question mark, providing a lightweight proxy for question-orientation that correlates positively with human-rated pedagogical quality scores.
 
 \subsubsection{Units}
 \label{subsubsec:pedagogical_units}
@@ -70,16 +70,16 @@ Safety and ethics, including data privacy, were defined as the model's adherence
 
 \subsubsection{Measurement}
 \label{subsubsec:safety_measurement}
-Evaluation was conducted using a two-pronged approach:
+Evaluation was conducted using automated detection with provisions for manual review:
 
 \begin{enumerate}
-    \item \textbf{Automated PII Detection:} A script scanned the complete set of model responses to flag potential PII or sensitive data exposure.
-    \item \textbf{Manual Review:} All responses flagged by the automated system, together with a randomized sample of unflagged responses, underwent manual review. Human evaluators checked for subtle safety issues, inappropriate tone, or privacy concerns that might have been missed by automated tools (see \cref{subsec:safety_ethics}).
+    \item \textbf{Automated PII Detection:} An automated detection system was integrated into the evaluation pipeline to flag potential PII or sensitive data exposure, using pattern-based rules (emails, phone numbers, ID-like strings) combined with named-entity recognition tuned to common PII categories (\cref{subsec:sanitization_procedures}). The detector recorded incident flags that inform the safety analysis in \cref{subsec:safety_proxies}.
+    \item \textbf{Manual Review Provisions:} The pipeline architecture supports manual review of flagged incidents together with randomized sampling of unflagged cases. Human evaluators can check for subtle safety issues, inappropriate tone, or privacy concerns that automated tools might miss. The sanitization hook in \cref{lst:sanitize_hook} implements the redaction pathway, using pattern-based rules and named-entity recognition to protect privacy during evaluation and operational deployment.
 \end{enumerate}
 
 \subsubsection{Units}
 \label{subsubsec:safety_units}
-Safety and ethics were reported as the \textbf{rate of PII incidents per 1,000 responses}. This quantitative measure was supplemented by a \textbf{qualitative compliance checklist}, documenting the number of safety and privacy standards successfully met during manual review.
+Safety and ethics were reported as the \textbf{rate of PII incidents per 1,000 responses}, calculated from the automated PII detection integrated into the evaluation pipeline (\cref{subsec:sanitization_procedures}). The detection system tallied potential PII exposure using pattern-based rules and named-entity recognition, with the resulting incident rate serving as the primary safety metric across models.
 
 \subsection{Cost}
 \label{subsec:cost}
@@ -110,7 +110,7 @@ Latency and throughput were evaluated as time-based performance metrics critical
 
 \begin{itemize}
     \item \textbf{Latency} was defined as the end-to-end duration from the moment a request was sent to the model's API to the moment the complete response was received. Both typical performance (median latency) and worst-case scenarios (95th percentile tail latency) were considered to capture user experience under normal and stressed conditions.
-    \item \textbf{Throughput} was defined as the maximum number of requests the API could successfully handle per unit of time under a concurrent load simulating multiple students interacting with the chatbot simultaneously.
+    \item \textbf{Concurrency handling} was evaluated through stress tests simulating multiple students interacting with the chatbot simultaneously, assessing API stability and rate-limit behavior under realistic classroom-like conditions.
 \end{itemize}
 
 \subsubsection{Measurement}
@@ -119,7 +119,7 @@ Performance was measured through two complementary approaches:
 
 \begin{enumerate}
     \item \textbf{Response Time Recording:} The benchmarking harness automatically recorded the \verb|latency_ms| for each API call during the primary experiments. This captured latency distributions across all prompts and models.
-    \item \textbf{Synthetic Load Test:} Separate concurrent load tests were conducted to simulate multiple simultaneous users. These tests quantified each model's stability and maximum achievable throughput under realistic classroom-like conditions.
+    \item \textbf{Concurrent Load Test:} Separate concurrent load tests were conducted to simulate multiple simultaneous users. These tests assessed each model's stability, success rates, and rate-limit handling under realistic classroom-like conditions.
 \end{enumerate}
 
 \subsubsection{Units}
@@ -129,7 +129,7 @@ Metrics were reported using the following standard units:
 \begin{itemize}
     \item \textbf{Median Latency:} milliseconds (ms)
     \item \textbf{95th Percentile Latency:} milliseconds (ms)
-    \item \textbf{Throughput:} requests per second (rps)
+    \item \textbf{First-Try Success Rate:} percentage of requests completed without retries
 \end{itemize}
 
 These measurements ensured that the selected model could reliably support real-time Socratic tutoring at classroom scale (see \cref{subsec:pedagogical_quality,subsec:contextual_adaptability} for relevant pedagogical context).
@@ -173,23 +173,11 @@ Ease of integration and tooling was defined as a qualitative measure of the deve
 
 \subsubsection{Measurement}
 \label{subsubsec:integration_measurement}
-Assessment of integration ease was conducted through a combination of checklist evaluation and hands-on testing:
-
-\begin{enumerate}
-    \item \textbf{Qualitative Checklist:} For each model, a checklist was completed documenting the availability of official Node.js clients, clarity of API reference documentation, ease of authentication setup, and the level of community and support resources.
-    \item \textbf{Practical Integration Test:} The time required to develop a functional adapter for each model was measured. This included the effort from initial environment setup to the execution of the first successful "hello world" API call within a cloned instance of the Mettle backend.
-\end{enumerate}
+Assessment of integration ease was conducted through hands-on development and qualitative evaluation of each provider's developer ecosystem. Each model's adapter implementation was evaluated holistically based on SDK quality, documentation clarity, authentication setup complexity, and the presence of community resources and tooling support. This assessment captured the cumulative developer experience across initial setup, API interaction, error handling, and ongoing maintenance considerations.
 
 \subsubsection{Units}
 \label{subsubsec:integration_units}
-Results for this criterion were reported as:
-
-\begin{itemize}
-    \item \textbf{Checklist Completion:} Presence or absence of key SDK and documentation features for each model.
-    \item \textbf{Time-to-Integrate:} Developer-hours required to implement a working adapter.
-\end{itemize}
-
-These measurements provided a concrete, reproducible evaluation of the practical effort required to deploy each candidate model and supported cross-referencing with other performance and cost criteria (see \cref{subsec:cost,subsec:reliability_availability}).
+Integration quality was reported as a normalized composite score (1--5 scale) reflecting the overall developer experience, accounting for SDK maturity, documentation completeness, ease of authentication, and community support. Higher scores indicate lower friction and better tooling ecosystems. The normalized scores enable comparison alongside other evaluation criteria in the multi-dimensional analysis (\cref{fig:radar_criteria}).
 
 \subsection{Controllability and Instruction Following}
 \label{subsec:explainability_controllability}
@@ -200,17 +188,16 @@ Controllability and instruction following were defined as the model's ability to
 
 \subsubsection{Measurement}
 \label{subsubsec:explainability_measurement}
-Controllability was evaluated through a series of targeted experiments:
+Controllability was evaluated through configuration experiments and qualitative assessment of instruction-following behavior:
 
 \begin{enumerate}
-    \item \textbf{Systematic Variation of Control Inputs:} For each student prompt, the model was queried multiple times with different system prompt templates (e.g., strict Socratic vs. hybrid conversational) and varying temperature settings.
-    \item \textbf{Rubric-Based Assessment:} The outputs for each configuration were scored using the Pedagogical Quality rubric (\cref{subsec:pedagogical_quality}). Consistent and predictable changes in rubric scores across variations were taken as evidence of effective controllability.
-    \item \textbf{Repeatability Check:} Multiple runs were performed to ensure that observed changes were reproducible and not artifacts of random output variation.
+    \item \textbf{Configuration Experiments:} Separate experiments tested system prompt template variations (strict Socratic, neutral baseline, hybrid conversational) and temperature settings ($T \in \{0.0, 0.3, 0.7\}$) to identify configurations that reliably produced high pedagogical quality across models (\cref{subsec:few_shot_prompts,subsec:temperature_sweep}). Models that responded predictably to these variations demonstrated effective controllability.
+    \item \textbf{Instruction-Following Assessment:} Throughout the main evaluation, models were assessed on their ability to maintain the selected Socratic persona and behavioral rules. Consistent adherence to instructions across diverse prompts was taken as evidence of strong controllability.
 \end{enumerate}
 
 \subsubsection{Units}
 \label{subsubsec:explainability_units}
-The primary metric was the delta ($\delta$) in mean Pedagogical Quality rubric scores observed between different control configurations. This quantitative measure captured the sensitivity and predictability of the model’s behavior in response to developer-specified instructions. Supplementary qualitative examples were also presented to illustrate high- and low-controllability behaviors in practice.
+Controllability was reported as a normalized composite score (1--5 scale) reflecting the model's responsiveness to configuration changes and consistency in maintaining instructed behavior. The score synthesizes observations from the template and temperature experiments (\cref{sec:experiments}) with qualitative assessments of instruction-following throughout the evaluation. Higher scores indicate more predictable and controllable behavior.
 
 To synthesize the results across the eight evaluation axes into a unified score for each candidate model, we applied a weighted aggregation scheme. The weights were assigned to reflect the strategic priorities of the project, emphasizing pedagogical effectiveness and contextual adaptability while appropriately accounting for technical performance, cost, and operational considerations.
 

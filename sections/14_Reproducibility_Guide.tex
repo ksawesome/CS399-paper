@@ -160,7 +160,7 @@ The integration plan translates the evaluated configuration into deployment-read
 
 \paragraph{4.~Quality assurance loop.} Execute the statistical analysis script (\texttt{code/statistical\_analysis.py}) to regenerate the inferential statistics and figures in \cref{sec:statistical_analysis}. Confirm that pedagogical and fidelity scores remain within the 95\% CI envelopes reported in \cref{tab:summary_scores} and that pairwise $q$-values stay below the FDR threshold where expected. Trigger the human evaluation workflow in \cref{subsec:human_evaluation} if material drift is detected.
 
-\paragraph{5.~Operational hardening.} Configure monitoring based on the telemetry schema in \cref{subsubsec:data_logged}: track latency, inclusion rate, hallucination flags, and PII proxy counts (\cref{tab:pii_proxy_counts}). Enforce the sanitization hook (\cref{subsec:sanitization_procedures}) before persisting transcripts and adhere to the retention controls in \cref{subsec:data_retention}. Incorporate price-table refreshes and routing ratio recalibration into the monthly review cycle using the sensitivity framework in \cref{subsec:decision_sensitivity}.
+\paragraph{5.~Operational hardening.} Configure monitoring based on the telemetry schema in \cref{subsubsec:data_logged}: track latency, inclusion rate, hallucination flags, and PII detection counts (\cref{tab:pii_detection_counts}). Enforce the sanitization hook (\cref{subsec:sanitization_procedures}) before persisting transcripts and adhere to the retention controls in \cref{subsec:data_retention}. Incorporate price-table refreshes and routing ratio recalibration into the monthly review cycle using the sensitivity framework in \cref{subsec:decision_sensitivity}.
 
 \paragraph{6.~Deployment handoff.} Package the validated configuration (prompt set, adapter parameters, routing ratio) and deliver it with the integration checklist to the Mettle platform team. Because the harness artifacts already satisfy the reproducibility requirements established in this section, the deployment team inherits a documented, scriptable pathway for re-runs, regression checks, and incident response.
 
@@ -182,7 +182,7 @@ Provider-side changes (model revisions, implicit rate limits), tokenizer drift, 
 \begin{itemize}
 	\item Logging HTTP status, retry counts, and backoff behaviour to detect throttling (\cref{subsubsec:core_functionality,subsubsec:rate_limiting_results}).
 	\item Persisting price tables and token counts with every run so that cost analyses in \cref{sec:cost_modelling} can be recomputed under updated tariffs.
-	\item Documenting sanitization hooks and PII detections (\cref{subsec:sanitization_procedures,tab:pii_proxy_counts}) so that safety posture changes remain auditable.
+	\item Documenting sanitization hooks and PII detections (\cref{subsec:sanitization_procedures,tab:pii_detection_counts}) so that safety posture changes remain auditable.
 	\item Versioning the prompt bank and human-rating rubrics to guard against silent content drift (\cref{sec:scoring_rubrics,subsec:human_evaluation}).
 \end{itemize}
 

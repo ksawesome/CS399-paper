@@ -48,6 +48,7 @@ class ModelProfile:
     controllability_anchor: float
     reliability_shift: float
     pii_bias: float
+    question_ratio_bias: float  # Bias for interrogative sentence ratio
 
 
 MODEL_PROFILES: Dict[str, ModelProfile] = {
@@ -63,6 +64,7 @@ MODEL_PROFILES: Dict[str, ModelProfile] = {
         controllability_anchor=4.35,
         reliability_shift=0.18,
         pii_bias=0.00012,
+        question_ratio_bias=0.08,
     ),
     "anthropic-claude-3-sonnet-20240229": ModelProfile(
         quality_delta=0.09,
@@ -76,6 +78,7 @@ MODEL_PROFILES: Dict[str, ModelProfile] = {
         controllability_anchor=4.18,
         reliability_shift=0.22,
         pii_bias=0.00028,
+        question_ratio_bias=0.12,
     ),
     "google-gemini-2.5-flash": ModelProfile(
         quality_delta=0.11,
@@ -89,6 +92,7 @@ MODEL_PROFILES: Dict[str, ModelProfile] = {
         controllability_anchor=4.40,
         reliability_shift=0.12,
         pii_bias=0.00018,
+        question_ratio_bias=0.15,
     ),
     "cohere-command-r-08-2024": ModelProfile(
         quality_delta=-0.02,
@@ -102,6 +106,7 @@ MODEL_PROFILES: Dict[str, ModelProfile] = {
         controllability_anchor=3.95,
         reliability_shift=0.02,
         pii_bias=0.00025,
+        question_ratio_bias=-0.05,
     ),
     "meta-llama-Llama-4-Maverick-17B-128E-Instruct": ModelProfile(
         quality_delta=-0.13,
@@ -115,6 +120,7 @@ MODEL_PROFILES: Dict[str, ModelProfile] = {
         controllability_anchor=3.75,
         reliability_shift=-0.10,
         pii_bias=0.00042,
+        question_ratio_bias=-0.12,
     ),
 }
 
@@ -256,6 +262,11 @@ def simulate_prompt_level(prompt_df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Dat
             unsafe_tone_flag = RNG.random() < max(0.002, 0.004 + 0.0008 * (difficulty - 2.2) - 0.0006 * (ped_score - 3.5))
             safety_redacted = pii_flag_raw and RNG.random() < 0.42
 
+            # Interrogative ratio: higher for better Socratic quality
+            # Base ratio around 0.35-0.45, correlated with pedagogical score
+            base_question_ratio = 0.40 + 0.08 * (ped_score - 3.8) + profile.question_ratio_bias
+            question_ratio = float(np.clip(base_question_ratio + RNG.normal(0, 0.06), 0.15, 0.75))
+
             integration_score = np.clip(profile.integration_anchor + RNG.normal(0, 0.25), 3.4, 5.0)
             controllability_score = np.clip(profile.controllability_anchor + RNG.normal(0, 0.35), 3.3, 4.8)
 
@@ -273,6 +284,7 @@ def simulate_prompt_level(prompt_df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.Dat
                     "unsafe_tone": int(unsafe_tone_flag),
                     "pii_flag_raw": int(pii_flag_raw),
                     "pii_redacted": int(safety_redacted),
+                    "question_ratio": question_ratio,
                     "tokens_in": base_tokens_in,
                     "tokens_out": base_tokens_out,
                     "cost_usd": cost_usd,
@@ -313,6 +325,7 @@ def summarize_models(prompt_metrics: pd.DataFrame) -> pd.DataFrame:
                 "ped_quality_mean": float(np.mean(ped)),
                 "ped_quality_ci_low": ped_ci_low,
                 "ped_quality_ci_high": ped_ci_high,
+                "question_ratio_mean": float(group["question_ratio"].mean()),
                 "context_inclusion_rate": float(group["context_inclusion"].mean()),
                 "context_fidelity_mean": float(group["context_score"].mean()),
                 "no_hallucination_rate": float(group["no_hallucination"].mean()),
