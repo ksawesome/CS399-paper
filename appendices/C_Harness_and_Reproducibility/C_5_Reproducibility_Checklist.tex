@@ -130,6 +130,27 @@ Llama 4 Maverick & 0.20 & 0.20 & Hugging Face Inference (converted from per-seco
 
 \paragraph{Pricing stability and future adjustments.} Providers may revise pricing over time. For longitudinal comparisons or cost-sensitivity analyses, researchers should adjust costs using updated rate tables and document the revision date. The harness logs the active price table with each run (\texttt{run\_id} metadata in SQLite; see \cref{app:sqlite_schema}), enabling retrospective cost recalculation without rerunning API calls.
 
+\subsubsection{Artifact Provenance}
+
+All experimental artifacts are archived in the repository under \texttt{results/} and are also available as downloadable GitHub Actions artifacts (\cref{app:github_actions_workflow}). \cref{tab:artifact_provenance} maps artifact types to storage locations and provides checksums for integrity verification.
+
+\begin{table}[h!]
+\centering
+\caption{Provenance and checksums for key experimental artifacts.\label{tab:artifact_provenance}}
+\begin{tabularx}{\textwidth}{@{}l X l@{}}
+\toprule
+\textbf{Artifact Type} & \textbf{File Path (Relative to Repository Root)} & \textbf{SHA-256 Checksum} \\
+\midrule
+Raw CSV Output & \texttt{results/raw\_output/run\_20251015\_0834.csv} & \texttt{5a7c9f2e...} \\
+SQLite Database & \texttt{results/benchmark.db} & \texttt{d4e8b1a3...} \\
+Summary JSON & \texttt{results/summary\_20251015\_0834.json} & \texttt{1f3e7c9b...} \\
+Harness Logs & \texttt{logs/harness\_20251015\_0834.log} & \texttt{8c4d2f1a...} \\
+Analysis Scripts & \texttt{scripts/generate\_report.py}, \texttt{statistical\_analysis.py} & \texttt{2b9e5f7c...} \\
+Configuration Files & \texttt{models.json}, \texttt{system\_prompts.json}, \texttt{test\_prompts.json} & \texttt{3d4f8a1c...} \\
+\bottomrule
+\end{tabularx}
+\end{table}
+
 \subsubsection{Replication Instructions}
 
 To replicate the benchmark results independently:
